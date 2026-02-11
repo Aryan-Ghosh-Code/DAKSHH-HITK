@@ -33,5 +33,16 @@ export const signInSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const profileUpdateSchema = z.object({
+  avatar: z.number().min(1).max(10).optional(),
+  username: registerStep1Schema.shape.username.optional(),
+  amongUsScore: z.number().optional(),
+  fullName: z.string().min(2, "Full name must be at least 2 characters").optional(),
+  phoneNumber: z.string().regex(/^\d{10}$/, "Phone number must be 10 digits").optional(),
+  college: z.string().min(2, "College name is too short").optional(),
+  stream: z.string().min(2, "Stream name is too short").optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
+export type ProfileUpdateInput = z.infer<typeof profileUpdateSchema>;

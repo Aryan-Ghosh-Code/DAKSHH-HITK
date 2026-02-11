@@ -7,9 +7,16 @@ export interface IUser {
   email: string;
   passwordHash?: string;
   image?: string;
+  avatar?: number;
   emailVerified?: Date;
+  amongUsScore?: number;
   createdAt: Date;
   updatedAt: Date;
+  fullName?: string;
+  phoneNumber?: string;
+  college?: string;
+  stream?: string;
+  isProfileComplete: boolean;
 }
 
 export interface IUserDocument extends IUser, mongoose.Document {
@@ -42,9 +49,43 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       required: false,
     },
+    avatar: {
+      type: Number,
+      required: false,
+      min: 1,
+      max: 10,
+    },
+    amongUsScore: {
+      type: Number,
+      default: 0,
+    },
     emailVerified: {
       type: Date,
       required: false,
+    },
+    fullName: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    college: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    stream: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    isProfileComplete: {
+      type: Boolean,
+      default: false,
     },
   },
   {

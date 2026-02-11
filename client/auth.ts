@@ -25,11 +25,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await user.comparePassword(password);
         if (!valid) return null;
 
+        let avatar = user.avatar;
+        if (!avatar) {
+          avatar = Math.floor(Math.random() * 10) + 1;
+          await User.findByIdAndUpdate(user._id, { avatar });
+        }
+
         return {
           id: user._id.toString(),
           name: user.username,
           email: user.email,
           image: user.image ?? undefined,
+          avatar,
         };
       },
     }),
@@ -43,10 +50,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/auth",
   },
   callbacks: {
+    redirect({ url, baseUrl }) {
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/profile`;
+      }
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return `${baseUrl}/profile`;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.username = user.name;
+        token.avatar = (user as { avatar?: number }).avatar;
       }
       return token;
     },
@@ -54,6 +70,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
+        session.user.avatar = token.avatar as number | undefined;
       }
       return session;
     },

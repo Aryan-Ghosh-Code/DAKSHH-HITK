@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       username: username.trim(),
       email: email.toLowerCase().trim(),
       passwordHash,
+      avatar: Math.floor(Math.random() * 10) + 1,
     });
 
     log("success", { email: email.toLowerCase() });

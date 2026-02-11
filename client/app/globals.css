@@ -360,3 +360,96 @@ footer h3 {
   border-color: #00FFFF;
   box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.3);
 }
+
+@keyframes emergency-overlay {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes emergency-text {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes emergency-crewmate {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-180deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.emergency-meeting-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 70, 85, 0.15);
+  animation: emergency-overlay 0.3s ease-out forwards;
+}
+
+.emergency-meeting-text {
+  position: relative;
+  color: #FF4655;
+  font-size: clamp(1.5rem, 6vw, 3rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 30px rgba(255, 70, 85, 0.9);
+  animation: emergency-text 0.8s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.emergency-meeting-crewmate {
+  position: absolute;
+  bottom: 20%;
+  animation: emergency-crewmate 0.6s ease-out 0.5s forwards;
+  opacity: 0;
+}
+
+.emergency-meeting-btn:hover {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes dial-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-10deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.dial-container {
+  animation: dial-in 0.4s ease-out forwards;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}

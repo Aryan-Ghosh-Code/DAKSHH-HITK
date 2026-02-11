@@ -22,7 +22,7 @@ function randomCrewmate() {
 function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/";
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/profile";
 
   const [mode, setMode] = useState<AuthMode>("signin");
   const [loading, setLoading] = useState(false);

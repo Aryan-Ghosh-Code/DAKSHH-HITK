@@ -59,9 +59,12 @@ export default function Navbar() {
             ))}
             {status === "loading" ? null : session ? (
               <div className="flex items-center gap-2">
-                <span className="text-cyan text-sm font-semibold max-w-[120px] truncate">
+                <Link
+                  href="/profile"
+                  className="text-cyan text-sm font-semibold max-w-[120px] truncate hover:text-yellow transition-colors"
+                >
                   {session.user?.username ?? session.user?.name ?? session.user?.email}
-                </span>
+                </Link>
                 <button
                   type="button"
                   onClick={() => signOut()}
@@ -121,9 +124,13 @@ export default function Navbar() {
               ))}
               {status === "loading" ? null : session ? (
                 <>
-                  <span className="text-cyan py-2 px-3 text-sm font-semibold">
+                  <Link
+                    href="/profile"
+                    className="text-cyan py-2 px-3 text-sm font-semibold hover:text-yellow transition-colors"
+                    onClick={closeMobileMenu}
+                  >
                     {session.user?.username ?? session.user?.name ?? session.user?.email}
-                  </span>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
