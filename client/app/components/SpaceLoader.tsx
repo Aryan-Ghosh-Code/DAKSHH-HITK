@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
 export default function SpaceLoader() {
@@ -11,6 +12,7 @@ export default function SpaceLoader() {
   const [welcomeOpacity, setWelcomeOpacity] = useState(0);
   const [toOpacity, setToOpacity] = useState(0);
   const [dakshhOpacity, setDakshhOpacity] = useState(0);
+  const [imgOpacity, setImgOpacity] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -225,6 +227,9 @@ export default function SpaceLoader() {
     // DAKSHH: fades in at 5s, stays until 6.5s, fades out by 7s
     setTimeout(() => setDakshhOpacity(1), 5000);
     setTimeout(() => setDakshhOpacity(0), 7000);
+
+    setTimeout(() => setImgOpacity(1), 7000);
+    setTimeout(() => setImgOpacity(0), 9000);
   }, [mounted]);
 
   // Handle loader fade out after 7.5 seconds (longer duration)
@@ -238,7 +243,7 @@ export default function SpaceLoader() {
         document.body.classList.remove('loader-ready');
         document.body.classList.add('loader-complete');
       }, 500); // Wait for fade transition
-    }, 7500); // Increased to 7.5 seconds
+    }, 9500); // Increased to 7.5 seconds
 
     return () => clearTimeout(timer);
   }, []);
@@ -330,6 +335,24 @@ export default function SpaceLoader() {
             }}
           >
             PRESENTS
+          </div>
+          <div
+            className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold uppercase tracking-wider transition-opacity duration-500 absolute"
+            style={{
+              opacity: imgOpacity,
+              fontFamily: 'var(--font-space-grotesk), sans-serif',
+              filter: 'url(#wobbly-text)',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <Image
+              src="/SHHH.png"
+              alt="SHHH"
+              width={700}
+              height={700}
+            />
           </div>
           <div
             className="text-white text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-8xl font-bold uppercase tracking-wider transition-opacity duration-500 absolute"

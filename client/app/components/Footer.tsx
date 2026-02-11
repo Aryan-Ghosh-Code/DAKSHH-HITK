@@ -29,7 +29,7 @@ export default function Footer() {
             </p>
             <p className="text-white/70 text-xs sm:text-sm">
               contact@dakshh-hitk.com<br />
-              +91 9110966189
+              +91 9434883745
             </p>
           </div>
         </div>
