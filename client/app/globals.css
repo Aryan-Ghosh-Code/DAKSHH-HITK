@@ -5,22 +5,6 @@
   --foreground: #171717;
 }
 
-/* Hide main content initially to prevent flash before loader */
-/* Only hide if loader hasn't completed yet */
-body:not(.loader-ready):not(.loader-complete) main,
-body:not(.loader-ready):not(.loader-complete) [data-main-content] {
-  opacity: 0;
-  visibility: hidden;
-}
-
-/* Show content smoothly when loader is ready or complete */
-body.loader-ready [data-main-content],
-body.loader-complete [data-main-content] {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease-in, visibility 0.3s ease-in;
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -309,3 +293,30 @@ footer h3 {
 .text-cyan { color: #00FFFF; }
 .text-yellow { color: #FFD700; }
 .text-green { color: #00FF00; }
+
+/* Coming Soon intro - crewmate spin + float left to right */
+@keyframes crewmate-intro-float {
+  0% {
+    transform: translateX(-100vw) translateY(0);
+  }
+  100% {
+    transform: translateX(100vw) translateY(-20px);
+  }
+}
+
+@keyframes crewmate-intro-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+.crewmate-intro-float {
+  animation: crewmate-intro-float 3s ease-in-out forwards;
+}
+
+.crewmate-intro-spin {
+  animation: crewmate-intro-spin 3s linear forwards;
+}

@@ -67,6 +67,32 @@ export const MOBILE_CREWMATES: MobileCrewmate[] = [
   { src: '/6.png', right: '3%', top: '240vh', size: 29, rotate: '-50deg', mirror: true, delay: 1 },
 ];
 
+/* Crewmates for coming soon - viewport only */
+export const COMING_SOON_MOBILE: MobileCrewmate[] = [
+  { src: '/1.png', left: '8%', top: '12%', size: 36, rotate: '28deg', delay: 0 },
+  { src: '/6.png', right: '10%', top: '20%', size: 34, rotate: '-25deg', mirror: true, delay: 1 },
+  { src: '/7.png', left: '12%', top: '78%', size: 35, rotate: '-22deg', delay: 2 },
+  { src: '/10.png', right: '8%', top: '85%', size: 32, rotate: '20deg', mirror: true, delay: 3 },
+  { src: '/2.png', left: '5%', top: '75vh', size: 32, rotate: '25deg', delay: 0 },
+  { src: '/5.png', left: '15%', top: '80vh', size: 28, rotate: '-18deg', delay: 1 },
+  { src: '/8.png', left: '25%', top: '78vh', size: 35, rotate: '30deg', delay: 2 },
+  { src: '/3.png', right: '8%', top: '77vh', size: 33, rotate: '-28deg', mirror: true, delay: 3 },
+  { src: '/9.png', right: '18%', top: '82vh', size: 29, rotate: '20deg', mirror: true, delay: 0 },
+  { src: '/4.png', right: '28%', top: '79vh', size: 36, rotate: '-35deg', mirror: true, delay: 1 },
+  { src: '/7.png', left: '3%', top: '50vh', size: 30, rotate: '45deg', delay: 0 },
+  { src: '/3.png', right: '3%', top: '50vh', size: 30, rotate: '-45deg', mirror: true, delay: 1 },
+];
+
+export const COMING_SOON_DESKTOP: DesktopCrewmate[] = [
+  { src: '/1.png', left: '8px', top: '150px', sizeClass: 'w-[100px] h-[100px] lg:w-[120px] lg:h-[120px]', rotate: '-12deg', delay: 0 },
+  { src: '/2.png', left: '8px', top: '400px', sizeClass: 'w-[90px] h-[90px] lg:w-[100px] lg:h-[100px]', rotate: '10deg', delay: 1 },
+  // { src: '/5.png', left: 'calc(50% - 48px)', top: '55%', sizeClass: 'w-[80px] h-[80px] lg:w-[95px] lg:h-[95px]', rotate: '-8deg', delay: 2 },git 
+  { src: '/7.png', left: '16px', top: '65%', sizeClass: 'w-[85px] h-[85px] lg:w-[100px] lg:h-[100px]', rotate: '15deg', delay: 3 },
+  { src: '/6.png', right: '8px', top: '120px', sizeClass: 'w-[95px] h-[95px] lg:w-[110px] lg:h-[110px]', rotate: '-14deg', mirror: true, delay: 0 },
+  { src: '/3.png', right: '8px', top: '350px', sizeClass: 'w-[105px] h-[105px] lg:w-[125px] lg:h-[125px]', rotate: '12deg', mirror: true, delay: 2 },
+  { src: '/4.png', right: '8px', top: '75%', sizeClass: 'w-[95px] h-[95px] lg:w-[115px] lg:h-[115px]', rotate: '-10deg', mirror: true, delay: 1 },
+];
+
 export const DESKTOP_CREWMATES: DesktopCrewmate[] = [
   { src: '/1.png', left: '8px', top: '200px', sizeClass: 'w-[120px] h-[120px] lg:w-[150px] lg:h-[150px]', rotate: '-12deg', delay: 0 },
   { src: '/2.png', left: '8px', top: '550px', sizeClass: 'w-[100px] h-[100px] lg:w-[120px] lg:h-[120px]', rotate: '10deg', delay: 1 },

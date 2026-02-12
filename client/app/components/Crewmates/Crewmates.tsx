@@ -4,6 +4,8 @@ import Image from 'next/image';
 import {
   MOBILE_CREWMATES,
   DESKTOP_CREWMATES,
+  COMING_SOON_MOBILE,
+  COMING_SOON_DESKTOP,
   floatClass,
 } from './crewmatesConfig';
 
@@ -15,14 +17,19 @@ function transformStr(rotate: string, mirror?: boolean) {
   return mirror ? `scaleX(-1) rotate(${rotate})` : `rotate(${rotate})`;
 }
 
-export default function Crewmates() {
+type CrewmatesProps = { compact?: boolean };
+
+export default function Crewmates({ compact = false }: CrewmatesProps) {
+  const mobileCrewmates = compact ? COMING_SOON_MOBILE : MOBILE_CREWMATES;
+  const desktopCrewmates = compact ? COMING_SOON_DESKTOP : DESKTOP_CREWMATES;
+
   return (
     <div
-      className="absolute inset-0 min-h-[300vh] pointer-events-none z-0"
+      className={`absolute inset-0 pointer-events-none z-0 ${compact ? 'min-h-screen' : 'min-h-[300vh]'}`}
       data-crewmate-wrap
       aria-hidden="true"
     >
-      {MOBILE_CREWMATES.map((m, i) => (
+      {mobileCrewmates.map((m, i) => (
         <div
           key={`m-${i}`}
           className={`${MOBILE_BASE} ${floatClass(m.delay)}`}
@@ -45,7 +52,7 @@ export default function Crewmates() {
           </div>
         </div>
       ))}
-      {DESKTOP_CREWMATES.map((d, i) => (
+      {desktopCrewmates.map((d, i) => (
         <div
           key={`d-${i}`}
           className={`${DESKTOP_BASE} ${floatClass(d.delay)}`}
