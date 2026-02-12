@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [profileAvatar, setProfileAvatar] = useState<number | null>(null);
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -18,6 +20,38 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (status !== "authenticated") {
+      setProfileAvatar(null);
+      return;
+    }
+
+    let cancelled = false;
+    const fallbackAvatar = session?.user?.avatar ?? 1;
+    setProfileAvatar(fallbackAvatar);
+
+    const fetchProfileAvatar = async () => {
+      try {
+        const res = await fetch("/api/user/profile", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { avatar?: number | null };
+        if (!cancelled) {
+          setProfileAvatar(data.avatar ?? fallbackAvatar);
+        }
+      } catch {
+        if (!cancelled) {
+          setProfileAvatar(fallbackAvatar);
+        }
+      }
+    };
+
+    fetchProfileAvatar();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [status, session?.user?.avatar]);
+
   const navLinks = [
     { name: "Home", href: "/#home" },
     { name: "Events", href: "/#events" },
@@ -27,6 +61,7 @@ export default function Navbar() {
   ];
 
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
+  const resolvedAvatar = profileAvatar ?? session?.user?.avatar ?? 1;
 
   return (
     <nav
@@ -92,9 +127,16 @@ export default function Navbar() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/profile"
-                  className="text-cyan text-sm font-semibold max-w-[120px] truncate hover:text-yellow transition-colors"
+                  className="w-10 h-10 rounded-full border-2 border-white overflow-hidden bg-black/60 hover:border-cyan transition-colors flex items-center justify-center"
+                  aria-label="Open profile"
                 >
-                  {session.user?.username ?? session.user?.name ?? session.user?.email}
+                  <Image
+                    src={`/${resolvedAvatar}.png`}
+                    alt="Profile avatar"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain"
+                  />
                 </Link>
                 <button
                   type="button"
@@ -157,10 +199,19 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/profile"
-                    className="text-cyan py-2 px-3 text-sm font-semibold hover:text-yellow transition-colors"
+                    className="text-cyan py-2 px-3 text-sm font-semibold hover:text-yellow transition-colors flex items-center gap-2"
                     onClick={closeMobileMenu}
                   >
-                    {session.user?.username ?? session.user?.name ?? session.user?.email}
+                    <span className="w-8 h-8 rounded-full border-2 border-white overflow-hidden bg-black/60 flex items-center justify-center">
+                      <Image
+                        src={`/${resolvedAvatar}.png`}
+                        alt="Profile avatar"
+                        width={32}
+                        height={32}
+                        className="w-full h-full object-contain"
+                      />
+                    </span>
+                    Profile
                   </Link>
                   <button
                     type="button"
