@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { registerApiSchema } from "@/lib/validations/auth";
+import { sendOtpEmail } from "@/lib/auth-mail";
+import { generateOtp, hashOtp, otpExpiryDate } from "@/lib/otp";
 
 function humanizeZodMessage(msg: string, field: string): string {
   const lower = msg.toLowerCase();
@@ -26,16 +28,11 @@ function getValidationMessage(error: { flatten: () => { fieldErrors: Record<stri
 }
 
 export async function POST(request: Request) {
-  const log = (msg: string, data?: unknown) => {
-    console.log(`[register] ${msg}`, data !== undefined ? JSON.stringify(data) : "");
-  };
-
   try {
     let body: unknown;
     try {
       body = await request.json();
     } catch {
-      log("parse_error", { message: "Request body is not valid JSON" });
       return NextResponse.json(
         { error: "Invalid request. Please try again." },
         { status: 400 }
@@ -43,29 +40,16 @@ export async function POST(request: Request) {
     }
 
     if (body === null || typeof body !== "object") {
-      log("invalid_body", { type: typeof body });
       return NextResponse.json(
         { error: "Invalid request. Please provide username, email, and password." },
         { status: 400 }
       );
     }
 
-    log("request_received", {
-      keys: Object.keys(body as object),
-      hasUsername: "username" in (body as object),
-      hasEmail: "email" in (body as object),
-      hasPassword: "password" in (body as object),
-    });
-
     const parsed = registerApiSchema.safeParse(body);
 
     if (!parsed.success) {
       const message = getValidationMessage(parsed.error);
-      log("validation_failed", {
-        message,
-        issues: parsed.error.issues,
-        received: body,
-      });
       return NextResponse.json(
         { error: message, fields: parsed.error.flatten().fieldErrors },
         { status: 400 }
@@ -78,7 +62,41 @@ export async function POST(request: Request) {
 
     const existingEmail = await User.findOne({ email: email.toLowerCase() });
     if (existingEmail) {
-      log("duplicate_email", { email: email.toLowerCase() });
+      if (existingEmail.provider === "google") {
+        return NextResponse.json(
+          {
+            error:
+              "This email is registered with Google. Please sign in using Google.",
+          },
+          { status: 409 }
+        );
+      }
+
+      if (!existingEmail.verified && existingEmail.passwordHash) {
+        const passwordMatches = await bcrypt.compare(
+          password,
+          existingEmail.passwordHash
+        );
+
+        if (passwordMatches) {
+          const otp = generateOtp();
+          await User.findByIdAndUpdate(existingEmail._id, {
+            $set: { otpCode: hashOtp(otp), otpExpiresAt: otpExpiryDate(10) },
+          });
+          await sendOtpEmail(existingEmail.email, otp);
+
+          return NextResponse.json(
+            {
+              success: true,
+              requiresVerification: true,
+              message:
+                "Account already exists but is not verified. A new OTP has been sent.",
+            },
+            { status: 200 }
+          );
+        }
+      }
+
       return NextResponse.json(
         { error: "An account with this email already exists" },
         { status: 409 }
@@ -89,7 +107,6 @@ export async function POST(request: Request) {
       username: new RegExp(`^${username}$`, "i"),
     });
     if (existingUsername) {
-      log("duplicate_username", { username });
       return NextResponse.json(
         { error: "Username is already taken" },
         { status: 409 }
@@ -97,16 +114,29 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const otp = generateOtp();
 
     await User.create({
       username: username.trim(),
       email: email.toLowerCase().trim(),
+      provider: "credentials",
       passwordHash,
       avatar: Math.floor(Math.random() * 10) + 1,
+      verified: false,
+      otpCode: hashOtp(otp),
+      otpExpiresAt: otpExpiryDate(10),
     });
 
-    log("success", { email: email.toLowerCase() });
-    return NextResponse.json({ success: true }, { status: 201 });
+    await sendOtpEmail(email.toLowerCase().trim(), otp);
+
+    return NextResponse.json(
+      {
+        success: true,
+        requiresVerification: true,
+        message: "OTP sent. Please verify your email to complete account setup.",
+      },
+      { status: 201 }
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     const stack = err instanceof Error ? err.stack : undefined;

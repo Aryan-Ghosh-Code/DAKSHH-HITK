@@ -5,10 +5,14 @@ export interface IUser {
   _id: mongoose.Types.ObjectId;
   username: string;
   email: string;
+  provider: "google" | "credentials";
   passwordHash?: string;
   image?: string;
   avatar?: number;
   emailVerified?: Date;
+  verified: boolean;
+  otpCode?: string;
+  otpExpiresAt?: Date;
   amongUsScore?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -41,6 +45,12 @@ const userSchema = new Schema<IUserDocument>(
       trim: true,
       lowercase: true,
     },
+    provider: {
+      type: String,
+      enum: ["google", "credentials"],
+      required: true,
+      default: "credentials",
+    },
     passwordHash: {
       type: String,
       required: false,
@@ -60,6 +70,18 @@ const userSchema = new Schema<IUserDocument>(
       default: 0,
     },
     emailVerified: {
+      type: Date,
+      required: false,
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    otpCode: {
+      type: String,
+      required: false,
+    },
+    otpExpiresAt: {
       type: Date,
       required: false,
     },
