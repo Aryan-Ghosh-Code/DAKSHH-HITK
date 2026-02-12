@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -11,7 +12,12 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "DAKSHH Tech Fest 2026",
   description: "A premier tech festival by Heritage Institute of Technology, Kolkata",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -37,7 +43,7 @@ export default function RootLayout({
             </filter>
           </defs>
         </svg>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
