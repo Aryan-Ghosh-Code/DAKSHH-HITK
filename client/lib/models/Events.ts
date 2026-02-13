@@ -60,6 +60,6 @@ const eventSchema = new Schema({
 );
 
 const Event =
-    models.User ?? model<IUserDocument>("Event", eventSchema);
+    models.Event ?? model<IEventDocument>("Event", eventSchema);
 
 export default Event;

@@ -7,7 +7,9 @@ export interface IUser {
     passwordHash?: string;
     image?: string;
     avatar?: number;
+    provider: "google" | "credentials";
     emailVerified?: Date;
+    verified?: boolean;
     amongUsScore?: number;
     createdAt: Date;
     updatedAt: Date;
