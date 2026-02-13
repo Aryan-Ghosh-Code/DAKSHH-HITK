@@ -3,10 +3,16 @@ import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { sendWelcomeEmail } from "@/lib/auth-mail";
 import { hashOtp } from "@/lib/otp";
+import {
+  clearOtpSession,
+  getOtpSession,
+  isValidDeviceId,
+} from "@/lib/otp-session-store";
 
 interface VerifyOtpBody {
   email?: string;
   otp?: string;
+  deviceId?: string;
 }
 
 export async function POST(request: Request) {
@@ -14,10 +20,17 @@ export async function POST(request: Request) {
     const body = (await request.json()) as VerifyOtpBody;
     const email = body.email?.toLowerCase().trim();
     const otp = body.otp?.trim();
+    const deviceId = body.deviceId;
 
-    if (!email || !otp) {
+    if (!email || !otp || !deviceId) {
       return NextResponse.json(
-        { error: "Missing required fields: email, otp" },
+        { error: "Missing required fields: email, otp, deviceId" },
+        { status: 400 }
+      );
+    }
+    if (!isValidDeviceId(deviceId)) {
+      return NextResponse.json(
+        { error: "Invalid device session. Please refresh and try again." },
         { status: 400 }
       );
     }
@@ -36,30 +49,23 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!user.otpCode || !user.otpExpiresAt) {
+    const otpSession = getOtpSession(email, deviceId);
+    if (!otpSession) {
       return NextResponse.json(
         { error: "No active OTP found. Please request a new OTP." },
         { status: 400 }
       );
     }
 
-    if (user.otpExpiresAt.getTime() < Date.now()) {
-      return NextResponse.json(
-        { error: "OTP has expired. Please request a new OTP." },
-        { status: 400 }
-      );
-    }
-
-    if (user.otpCode !== hashOtp(otp)) {
+    if (otpSession.otpHash !== hashOtp(otp)) {
       return NextResponse.json({ error: "Invalid OTP" }, { status: 400 });
     }
 
     const justVerified = !user.verified;
     user.emailVerified = new Date();
     user.verified = true;
-    user.otpCode = undefined;
-    user.otpExpiresAt = undefined;
     await user.save();
+    clearOtpSession(email, deviceId);
 
     if (justVerified) {
       await sendWelcomeEmail(email);

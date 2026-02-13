@@ -56,14 +56,6 @@ const userSchema = new Schema<IUserDocument>(
       type: Boolean,
       default: false,
     },
-    otpCode: {
-      type: String,
-      required: false,
-    },
-    otpExpiresAt: {
-      type: Date,
-      required: false,
-    },
     fullName: {
       type: String,
       required: false,

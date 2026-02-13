@@ -3,18 +3,27 @@ import connect from "@/lib/mongoose";
 import User from "@/lib/models/User";
 import { sendOtpEmail } from "@/lib/auth-mail";
 import { generateOtp, hashOtp, otpExpiryDate } from "@/lib/otp";
+import { isValidDeviceId, setOtpSession } from "@/lib/otp-session-store";
 
 interface ResendOtpBody {
   email?: string;
+  deviceId?: string;
 }
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ResendOtpBody;
     const email = body.email?.toLowerCase().trim();
+    const deviceId = body.deviceId;
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+    if (!isValidDeviceId(deviceId)) {
+      return NextResponse.json(
+        { error: "Invalid device session. Please refresh and try again." },
+        { status: 400 }
+      );
     }
 
     await connect();
@@ -39,9 +48,12 @@ export async function POST(request: Request) {
     }
 
     const otp = generateOtp();
-    user.otpCode = hashOtp(otp);
-    user.otpExpiresAt = otpExpiryDate(10);
-    await user.save();
+    setOtpSession({
+      email,
+      deviceId,
+      otpHash: hashOtp(otp),
+      expiresAt: otpExpiryDate(10),
+    });
 
     await sendOtpEmail(email, otp);
     return NextResponse.json({ success: true, message: "OTP sent" });

@@ -5,133 +5,151 @@ interface OtpEmailTemplateProps {
 }
 
 export function OtpEmailTemplate({ otp }: OtpEmailTemplateProps) {
-  const siteUrl = "https://dakshh-hitk.com";
-  const leftPeek = `${siteUrl}/peeking2.png`;
-  const rightPeek = `${siteUrl}/peeking.png`;
+  const siteUrl = (
+    process.env.SITE_URL ?? "https://dakshh-staging.vercel.app/"
+  ).replace(/\/+$/, "");
+  const dakshhLogo = `${siteUrl}/Dakshh_Logo.png`;
+  const iicLogo = `${siteUrl}/IIC.png`;
+  const heritageLogo = `${siteUrl}/Heritage.png`;
   const shhhLogo = `${siteUrl}/SHHH.png`;
 
   return (
     <div
       style={{
-        backgroundColor: "#050505",
+        backgroundColor: "#040404",
         margin: 0,
-        padding: "24px 14px",
+        padding: "18px 10px",
         fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          '"Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         color: "#f4f4f5",
       }}
     >
       <div
         style={{
-          maxWidth: "620px",
+          width: "100%",
+          maxWidth: "980px",
           margin: "0 auto",
-          backgroundColor: "#0a0a0a",
-          border: "3px solid #ffffff",
-          borderRadius: "20px",
+          backgroundColor: "#090909",
+          border: "2px solid #1f1f1f",
+          borderRadius: "16px",
           overflow: "hidden",
         }}
       >
         <div
           style={{
-            background:
-              "linear-gradient(90deg, rgba(255,70,85,0.95) 0%, rgba(0,106,255,0.95) 55%, rgba(255,214,0,0.95) 100%)",
-            padding: "16px 24px",
-            color: "#09090b",
-            fontWeight: 700,
-            letterSpacing: "1px",
-            textTransform: "uppercase",
-            fontSize: "13px",
-            textAlign: "center",
+            padding: "16px 18px",
+            borderBottom: "1px solid #1f1f1f",
+            backgroundColor: "#0e0e0e",
           }}
         >
-          DAKSHH OTP VERIFICATION
-        </div>
-
-        <div style={{ padding: "26px 24px" }}>
-          <p
-            style={{
-              margin: "0 0 14px",
-              fontSize: "13px",
-              color: "#00ffff",
-              letterSpacing: "0.8px",
-              textTransform: "uppercase",
-              fontWeight: 700,
-            }}
-          >
-            Emergency verification signal
-          </p>
-
           <table
             role="presentation"
             width="100%"
             cellPadding={0}
             cellSpacing={0}
-            style={{
-              marginBottom: "16px",
-            }}
           >
             <tbody>
               <tr>
-                <td
-                  align="left"
-                  style={{ width: "64px", verticalAlign: "middle" }}
-                >
-                  <img
-                    src={leftPeek}
-                    alt="Crewmate peeking"
-                    width={52}
-                    height={52}
-                    style={{ display: "block", border: 0 }}
-                  />
+                <td />
+                <td align="right" style={{ verticalAlign: "middle" }}>
+                  <table role="presentation" cellPadding={0} cellSpacing={0}>
+                    <tbody>
+                      <tr>
+                        <td style={{ paddingRight: "8px" }}>
+                          <img
+                            src={iicLogo}
+                            alt="IIC logo"
+                            width={34}
+                            height={34}
+                            style={{ display: "block", border: 0 }}
+                          />
+                        </td>
+                        <td>
+                          <img
+                            src={heritageLogo}
+                            alt="Heritage logo"
+                            width={34}
+                            height={34}
+                            style={{ display: "block", border: 0 }}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{ padding: "24px 18px" }}>
+          <table
+            role="presentation"
+            width="100%"
+            cellPadding={0}
+            cellSpacing={0}
+            style={{ marginBottom: "18px" }}
+          >
+            <tbody>
+              <tr>
                 <td align="center" style={{ verticalAlign: "middle" }}>
-                  <h1
+                  <img
+                    src={dakshhLogo}
+                    alt="Dakshh logo"
+                    width={72}
+                    height={72}
                     style={{
-                      margin: 0,
-                      fontSize: "29px",
-                      lineHeight: "35px",
+                      display: "block",
+                      border: 0,
+                      margin: "0 auto 8px",
+                    }}
+                  />
+                  <div
+                    style={{
                       color: "#ffffff",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
+                      fontWeight: 700,
+                      fontSize: "30px",
+                      letterSpacing: "1.5px",
+                      lineHeight: "34px",
                     }}
                   >
-                    Confirm your account
-                  </h1>
-                </td>
-                <td
-                  align="right"
-                  style={{ width: "64px", verticalAlign: "middle" }}
-                >
-                  <img
-                    src={rightPeek}
-                    alt="Crewmate peeking"
-                    width={52}
-                    height={52}
-                    style={{ display: "block", border: 0 }}
-                  />
+                    DAKSHH 2026
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
 
+          <h1
+            style={{
+              margin: "0 0 10px",
+              fontSize: "34px",
+              lineHeight: "40px",
+              color: "#ffffff",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Sup Crewmate
+          </h1>
+
           <p
             style={{
               margin: "0 0 16px",
-              lineHeight: "24px",
+              lineHeight: "26px",
               color: "#e4e4e7",
-              fontSize: "16px",
+              fontSize: "17px",
             }}
           >
-            Use this one-time code to verify your account and complete
-            onboarding. Keep it private and enter it exactly as shown.
+            Use this one-time code to verify your account. Enter it exactly as
+            shown.
           </p>
 
           <div
             style={{
-              borderRadius: "14px",
-              border: "2px solid #ffffff",
-              backgroundColor: "rgba(255,255,255,0.03)",
-              padding: "14px 16px",
+              borderRadius: "12px",
+              border: "1px solid #2a2a2a",
+              backgroundColor: "#0f0f0f",
+              padding: "16px 14px",
               textAlign: "center",
               marginBottom: "16px",
             }}
@@ -151,11 +169,11 @@ export function OtpEmailTemplate({ otp }: OtpEmailTemplateProps) {
             <span
               style={{
                 letterSpacing: "8px",
-                fontSize: "34px",
+                fontSize: "38px",
                 fontWeight: 800,
                 color: "#00ffff",
                 display: "inline-block",
-                lineHeight: "40px",
+                lineHeight: "44px",
               }}
             >
               {otp}
@@ -175,7 +193,7 @@ export function OtpEmailTemplate({ otp }: OtpEmailTemplateProps) {
                   style={{
                     verticalAlign: "middle",
                     color: "#a1a1aa",
-                    fontSize: "14px",
+                    fontSize: "15px",
                   }}
                 >
                   This code expires in{" "}
@@ -197,9 +215,9 @@ export function OtpEmailTemplate({ otp }: OtpEmailTemplateProps) {
           <p
             style={{
               margin: 0,
-              fontSize: "13px",
+              fontSize: "14px",
               color: "#a1a1aa",
-              lineHeight: "20px",
+              lineHeight: "22px",
             }}
           >
             If you did not request this code, you can safely ignore this email.

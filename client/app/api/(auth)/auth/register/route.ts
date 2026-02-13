@@ -5,6 +5,7 @@ import User from "@/lib/models/User";
 import { registerApiSchema } from "@/lib/validations/auth";
 import { sendOtpEmail } from "@/lib/auth-mail";
 import { generateOtp, hashOtp, otpExpiryDate } from "@/lib/otp";
+import { isValidDeviceId, setOtpSession } from "@/lib/otp-session-store";
 
 function humanizeZodMessage(msg: string, field: string): string {
   const lower = msg.toLowerCase();
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    const deviceId = (body as { deviceId?: unknown }).deviceId;
 
     const parsed = registerApiSchema.safeParse(body);
 
@@ -57,10 +59,17 @@ export async function POST(request: Request) {
     }
 
     const { username, email, password } = parsed.data;
+    if (!isValidDeviceId(deviceId)) {
+      return NextResponse.json(
+        { error: "Invalid device session. Please refresh and try again." },
+        { status: 400 }
+      );
+    }
+    const normalizedEmail = email.toLowerCase().trim();
 
     await connect();
 
-    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+    const existingEmail = await User.findOne({ email: normalizedEmail });
     if (existingEmail) {
       if (existingEmail.provider === "google") {
         return NextResponse.json(
@@ -80,8 +89,11 @@ export async function POST(request: Request) {
 
         if (passwordMatches) {
           const otp = generateOtp();
-          await User.findByIdAndUpdate(existingEmail._id, {
-            $set: { otpCode: hashOtp(otp), otpExpiresAt: otpExpiryDate(10) },
+          setOtpSession({
+            email: existingEmail.email,
+            deviceId,
+            otpHash: hashOtp(otp),
+            expiresAt: otpExpiryDate(10),
           });
           await sendOtpEmail(existingEmail.email, otp);
 
@@ -118,16 +130,21 @@ export async function POST(request: Request) {
 
     await User.create({
       username: username.trim(),
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       provider: "credentials",
       passwordHash,
       avatar: Math.floor(Math.random() * 10) + 1,
       verified: false,
-      otpCode: hashOtp(otp),
-      otpExpiresAt: otpExpiryDate(10),
     });
 
-    await sendOtpEmail(email.toLowerCase().trim(), otp);
+    setOtpSession({
+      email: normalizedEmail,
+      deviceId,
+      otpHash: hashOtp(otp),
+      expiresAt: otpExpiryDate(10),
+    });
+
+    await sendOtpEmail(normalizedEmail, otp);
 
     return NextResponse.json(
       {

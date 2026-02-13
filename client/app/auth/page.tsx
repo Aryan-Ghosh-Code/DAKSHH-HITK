@@ -14,9 +14,30 @@ import {
 } from "@/lib/validations/auth";
 
 type AuthMode = "signin" | "signup" | "verify";
+const OTP_DEVICE_ID_KEY = "otp_device_id";
 
 function randomCrewmate() {
   return Math.floor(Math.random() * 10) + 1;
+}
+
+function createFallbackDeviceId() {
+  return `${Date.now().toString(36)}_${Math.random()
+    .toString(36)
+    .slice(2, 12)}`;
+}
+
+function getOrCreateDeviceId() {
+  if (typeof window === "undefined") return "";
+  const existing = window.sessionStorage.getItem(OTP_DEVICE_ID_KEY);
+  if (existing) return existing;
+
+  const generated =
+    typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID().replace(/-/g, "_")
+      : createFallbackDeviceId();
+
+  window.sessionStorage.setItem(OTP_DEVICE_ID_KEY, generated);
+  return generated;
 }
 
 function AuthForm() {
@@ -89,6 +110,7 @@ function AuthForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const deviceId = getOrCreateDeviceId();
 
     const preCheckRes = await fetch("/api/auth/signin-check", {
       method: "POST",
@@ -96,6 +118,7 @@ function AuthForm() {
       body: JSON.stringify({
         email: signInEmail,
         password: signInPassword,
+        deviceId,
       }),
     });
     const preCheckData = await preCheckRes.json().catch(() => ({}));
@@ -146,6 +169,7 @@ function AuthForm() {
     }
 
     setLoading(true);
+    const deviceId = getOrCreateDeviceId();
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -154,6 +178,7 @@ function AuthForm() {
         username: signUpData.username,
         email: signUpData.email,
         password: signUpData.password,
+        deviceId,
       }),
     });
 
@@ -184,6 +209,7 @@ function AuthForm() {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    const deviceId = getOrCreateDeviceId();
 
     const res = await fetch("/api/auth/verify-otp", {
       method: "POST",
@@ -191,6 +217,7 @@ function AuthForm() {
       body: JSON.stringify({
         email: verificationEmail,
         otp: otpCode,
+        deviceId,
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -224,10 +251,11 @@ function AuthForm() {
     if (!verificationEmail) return;
 
     setLoading(true);
+    const deviceId = getOrCreateDeviceId();
     const res = await fetch("/api/auth/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: verificationEmail }),
+      body: JSON.stringify({ email: verificationEmail, deviceId }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);

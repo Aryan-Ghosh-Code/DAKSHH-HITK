@@ -5,14 +5,23 @@ import User from "@/lib/models/User";
 import { signInSchema } from "@/lib/validations/auth";
 import { sendOtpEmail } from "@/lib/auth-mail";
 import { generateOtp, hashOtp, otpExpiryDate } from "@/lib/otp";
+import { isValidDeviceId, setOtpSession } from "@/lib/otp-session-store";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const parsed = signInSchema.safeParse(body);
+    const deviceId = (body as { deviceId?: unknown })?.deviceId;
 
     if (!parsed.success) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 400 });
+    }
+
+    if (!isValidDeviceId(deviceId)) {
+      return NextResponse.json(
+        { error: "Invalid device session. Please refresh and try again." },
+        { status: 400 }
+      );
     }
 
     const { email, password } = parsed.data;
@@ -42,9 +51,12 @@ export async function POST(request: Request) {
 
     if (!user.verified) {
       const otp = generateOtp();
-      user.otpCode = hashOtp(otp);
-      user.otpExpiresAt = otpExpiryDate(10);
-      await user.save();
+      setOtpSession({
+        email: normalizedEmail,
+        deviceId,
+        otpHash: hashOtp(otp),
+        expiresAt: otpExpiryDate(10),
+      });
       await sendOtpEmail(normalizedEmail, otp);
 
       return NextResponse.json(
