@@ -64,8 +64,9 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-black/90 backdrop-blur-md" : "bg-transparent"
-        }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? "bg-black/90 backdrop-blur-md" : "bg-transparent"
+      }`}
     >
       <div className="max-w-1400 mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 md:py-4">
         <div className="flex items-center justify-between">
@@ -74,36 +75,21 @@ export default function Navbar() {
               href="/"
               className="text-lg sm:text-xl md:text-2xl font-bold text-white hover:text-cyan transition-colors"
             >
-              <Image
-                src="/Dakshh_Logo.png"
-                alt="logo"
-                width={70}
-                height={70}
-              />
+              <Image src="/Dakshh_Logo.png" alt="logo" width={70} height={70} />
             </Link>
 
             <Link
               href="/"
               className="text-lg sm:text-xl md:text-2xl font-bold text-white hover:text-cyan transition-colors"
             >
-              <Image
-                src="/IIC.png"
-                alt="logo"
-                width={55}
-                height={55}
-              />
+              <Image src="/IIC.png" alt="logo" width={55} height={55} />
             </Link>
 
             <Link
               href="/"
               className="text-lg sm:text-xl md:text-2xl font-bold text-white hover:text-cyan transition-colors"
             >
-              <Image
-                src="/Heritage.png"
-                alt="logo"
-                width={70}
-                height={70}
-              />
+              <Image src="/Heritage.png" alt="logo" width={70} height={70} />
             </Link>
           </div>
 
