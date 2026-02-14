@@ -34,7 +34,28 @@ export interface IEvent {
     clubs: string[];
     spocs: ISpoc[];
     registrations: Types.ObjectId[];
-
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface EventProps {
+    _id: Types.ObjectId;
+    eventName: string;
+    category: "Software" | "Hardware" | "Entrepreneurship";
+    description: string;
+    banner: string;
+    clubs: string[];
+    __v: number;
+}
+
+export interface EventByIdProps {
+    _id: Types.ObjectId;
+    eventName: string;
+    category: "Software" | "Hardware" | "Entrepreneurship";
+    description: string;
+    banner: string;
+    rules: string[];
+    clubs: string[];
+    spocs: ISpoc[];
+    __v: number;
 }
