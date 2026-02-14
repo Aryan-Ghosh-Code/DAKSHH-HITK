@@ -38,7 +38,7 @@ const EventPage = () => {
 		};
 
 		fetchEventById();
-	}, []);
+	}, [id]);
 
 	console.log({ loading, event });
 
@@ -59,7 +59,7 @@ const EventPage = () => {
 					scale={0.35}
 				/>
 			</div>
-			<div className="relative z-10 min-h-[300vh]">
+			<div className="relative z-10 h-screen overflow-hidden">
 				<Crewmates />
 			</div>
 		</div>

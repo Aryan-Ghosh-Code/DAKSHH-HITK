@@ -16,7 +16,7 @@ const LandingEjection = ({ setDisplayHeroSection }: LandingEjectionProps) => {
 			transition={{
 				duration: 8,
 				ease: "linear",
-				repeat: 1
+				repeat: 0
 			}}
 			onAnimationComplete={() => {
 				setDisplayHeroSection(true);

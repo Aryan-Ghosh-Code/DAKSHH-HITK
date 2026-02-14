@@ -10,7 +10,7 @@ import Crewmates from './components/Crewmates';
 
 export default function Home() {
   return (
-    <div className="w-full min-h-screen relative" data-main-content>
+    <div className="w-full h-full relative" data-main-content>
       <SpaceLoader />
       <Navbar />
       <div className="fixed inset-0 w-full h-full z-0">

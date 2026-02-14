@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { resolveDashboardPath } from "@/lib/roles";
 
 export default function Navbar() {
@@ -21,14 +21,10 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    if (status !== "authenticated") {
-      setProfileAvatar(null);
-      return;
-    }
+    if (status !== "authenticated") return;
 
     let cancelled = false;
     const fallbackAvatar = session?.user?.avatar ?? 1;
-    setProfileAvatar(fallbackAvatar);
 
     const fetchProfileAvatar = async () => {
       try {
@@ -54,7 +50,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/#home" },
-    { name: "Events", href: "/#events" },
+    { name: "Events", href: "/events" },
     { name: "Stats", href: "/#stats" },
     { name: "Sponsors", href: "/#sponsors" },
     { name: "Contact", href: "/#contact" },
@@ -138,7 +134,7 @@ export default function Navbar() {
                     className="w-full h-full object-contain"
                   />
                 </Link>
-                <button
+                {/* <button
                   type="button"
                   onClick={() => signOut()}
                   className="hand-drawn-button text-xs xl:text-sm"
@@ -149,21 +145,9 @@ export default function Navbar() {
                   }}
                 >
                   Sign Out
-                </button>
+                </button> */}
               </div>
-            ) : (
-              <Link
-                href="/auth"
-                className="hand-drawn-button text-xs xl:text-sm"
-                style={{
-                  background: "rgba(255, 70, 85, 0.9)",
-                  padding: "0.4rem 0.8rem",
-                  fontSize: "0.85rem",
-                }}
-              >
-                Sign In
-              </Link>
-            )}
+            ): null}
           </div>
 
           <button
@@ -222,7 +206,7 @@ export default function Navbar() {
                     </span>
                     Profile
                   </Link>
-                  <button
+                  {/* <button
                     type="button"
                     onClick={() => {
                       signOut();
@@ -231,7 +215,7 @@ export default function Navbar() {
                     className="text-white hover:text-cyan transition-colors py-2 sm:py-3 px-3 sm:px-4 border-b-2 border-white/20 text-sm sm:text-base text-left"
                   >
                     Sign Out
-                  </button>
+                  </button> */}
                 </>
               ) : (
                 <Link

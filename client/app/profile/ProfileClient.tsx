@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { signOut } from "next-auth/react";
 import Image from "next/image";
 import Navbar from "../components/Navbar";
 import HandDrawnCard from "../components/HandDrawnCard";
@@ -38,38 +39,50 @@ export default function ProfileClient({
     stream: "",
     isProfileComplete: false,
   });
-  const [activeTab, setActiveTab] = useState<"details" | "teams" | "events" | "arcade">("details");
+  const [activeTab, setActiveTab] = useState<
+    "details" | "teams" | "events" | "arcade"
+  >("details");
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
   const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [gameOpen, setGameOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const fetchProfile = async () => {
-    const res = await fetch("/api/user/profile");
-    if (res.ok) {
-      const data = await res.json();
-      setProfile({
-        username: data.username,
-        avatar: data.avatar ?? 1,
-        email: data.email ?? "",
-        fullName: data.fullName ?? "",
-        phoneNumber: data.phoneNumber ?? "",
-        college: data.college ?? "",
-        stream: data.stream ?? "",
-        isProfileComplete: data.isProfileComplete ?? false,
-      });
-      setFormData({
-        fullName: data.fullName ?? "",
-        phoneNumber: data.phoneNumber ?? "",
-        college: data.college ?? "",
-        stream: data.stream ?? "",
-      });
-    }
-  };
-
   useEffect(() => {
-    fetchProfile();
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/user/profile");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled) return;
+
+        setProfile({
+          username: data.username,
+          avatar: data.avatar ?? 1,
+          email: data.email ?? "",
+          fullName: data.fullName ?? "",
+          phoneNumber: data.phoneNumber ?? "",
+          college: data.college ?? "",
+          stream: data.stream ?? "",
+          isProfileComplete: data.isProfileComplete ?? false,
+        });
+
+        setFormData({
+          fullName: data.fullName ?? "",
+          phoneNumber: data.phoneNumber ?? "",
+          college: data.college ?? "",
+          stream: data.stream ?? "",
+        });
+      } catch (e) {
+        // ignore fetch errors for now
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSaveProfile = async () => {
@@ -111,7 +124,7 @@ export default function ProfileClient({
   const displayAvatar = profile.avatar ?? 1;
 
   return (
-    <div className="w-full min-h-screen relative" data-main-content>
+    <div className="w-full relative" data-main-content>
       <Navbar />
       <div className="fixed inset-0 w-full h-full z-0">
         <DotOrbit
@@ -128,19 +141,21 @@ export default function ProfileClient({
         />
       </div>
 
-      <div className="relative z-10 min-h-screen pt-20 pb-12 px-4">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 pt-35 pb-10">
+        <div className="max-w-2xl w-full mx-auto space-y-6 text-center">
           {/* Top Section: Avatar and Username */}
           <HandDrawnCard className="p-6 sm:p-8 relative">
             <div className="absolute top-4 right-4 text-cyan text-xs font-mono">
-              {profile.isProfileComplete ? "PROFILE COMPLETE" : "PROFILE INCOMPLETE"}
+              {profile.isProfileComplete
+                ? "PROFILE COMPLETE"
+                : "PROFILE INCOMPLETE"}
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <button
                 type="button"
                 onClick={() => setAvatarModalOpen(true)}
                 disabled={loading}
-                className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden flex-shrink-0 border-4 border-cyan hover:border-yellow transition-colors ring-2 ring-white/30 hover:scale-105 disabled:opacity-70"
+                className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden shrink-0 border-4 border-cyan hover:border-yellow transition-colors ring-2 ring-white/30 hover:scale-105 disabled:opacity-70"
               >
                 <Image
                   src={`/${displayAvatar}.png`}
@@ -154,7 +169,9 @@ export default function ProfileClient({
                 <h1 className="hand-drawn-title text-white text-4xl! sm:text-4xl mb-2">
                   {profile.username}
                 </h1>
-                <p className="text-cyan text-sm">{profile.email || "No email"}</p>
+                <p className="text-cyan text-sm">
+                  {profile.email || "No email"}
+                </p>
               </div>
             </div>
           </HandDrawnCard>
@@ -170,10 +187,11 @@ export default function ProfileClient({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`hand-drawn-button px-4 py-2 text-sm sm:text-base transition-all duration-300 ${activeTab === tab.id
-                  ? "bg-cyan text-black scale-105"
-                  : "bg-transparent text-white border-white/50 hover:border-cyan hover:text-cyan"
-                  }`}
+                className={`hand-drawn-button px-4 py-2 text-sm sm:text-base transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? "bg-cyan text-black scale-105"
+                    : "bg-transparent text-white border-white/50 hover:border-cyan hover:text-cyan"
+                }`}
               >
                 {tab.label}
               </button>
@@ -181,27 +199,13 @@ export default function ProfileClient({
           </div>
 
           {/* Tab Content */}
-          <div className="min-h-[400px]">
+          <div className="min-h-100">
             {activeTab === "details" && (
               <HandDrawnCard className="p-6 sm:p-8">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="hand-drawn-title text-white text-2xl">Student Details</h2>
-                  {!isEditing && (
-                    <button
-                      onClick={() => {
-                        setFormData({
-                          fullName: profile.fullName,
-                          phoneNumber: profile.phoneNumber,
-                          college: profile.college,
-                          stream: profile.stream,
-                        });
-                        setIsEditing(true);
-                      }}
-                      className="text-cyan hover:text-yellow text-sm underline"
-                    >
-                      Edit
-                    </button>
-                  )}
+                  <h2 className="hand-drawn-title text-white text-2xl">
+                    Student Details
+                  </h2>
                 </div>
 
                 {isEditing ? (
@@ -212,17 +216,29 @@ export default function ProfileClient({
                         <input
                           type="text"
                           value={formData.fullName || ""}
-                          onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              fullName: e.target.value,
+                            })
+                          }
                           className="w-full bg-black/30 border-2 border-white/30 rounded px-3 py-2 text-white focus:border-cyan outline-none"
                           placeholder="Enter full name"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-white text-sm">Phone Number</label>
+                        <label className="text-white text-sm">
+                          Phone Number
+                        </label>
                         <input
                           type="text"
                           value={formData.phoneNumber || ""}
-                          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              phoneNumber: e.target.value,
+                            })
+                          }
                           className="w-full bg-black/30 border-2 border-white/30 rounded px-3 py-2 text-white focus:border-cyan outline-none"
                           placeholder="Enter phone number"
                         />
@@ -232,7 +248,12 @@ export default function ProfileClient({
                         <input
                           type="text"
                           value={formData.college || ""}
-                          onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              college: e.target.value,
+                            })
+                          }
                           className="w-full bg-black/30 border-2 border-white/30 rounded px-3 py-2 text-white focus:border-cyan outline-none"
                           placeholder="Enter college name"
                         />
@@ -242,7 +263,9 @@ export default function ProfileClient({
                         <input
                           type="text"
                           value={formData.stream || ""}
-                          onChange={(e) => setFormData({ ...formData, stream: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, stream: e.target.value })
+                          }
                           className="w-full bg-black/30 border-2 border-white/30 rounded px-3 py-2 text-white focus:border-cyan outline-none"
                           placeholder="Enter stream (e.g. CSE)"
                         />
@@ -267,20 +290,44 @@ export default function ProfileClient({
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
                     <div>
-                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">Full Name</label>
-                      <p className="text-white text-lg">{profile.fullName || <span className="text-white/30 italic">Not set</span>}</p>
+                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">
+                        Full Name
+                      </label>
+                      <p className="text-white text-lg">
+                        {profile.fullName || (
+                          <span className="text-white/30 italic">Not set</span>
+                        )}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">Phone Number</label>
-                      <p className="text-white text-lg">{profile.phoneNumber || <span className="text-white/30 italic">Not set</span>}</p>
+                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">
+                        Phone Number
+                      </label>
+                      <p className="text-white text-lg">
+                        {profile.phoneNumber || (
+                          <span className="text-white/30 italic">Not set</span>
+                        )}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">College</label>
-                      <p className="text-white text-lg">{profile.college || <span className="text-white/30 italic">Not set</span>}</p>
+                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">
+                        College
+                      </label>
+                      <p className="text-white text-lg">
+                        {profile.college || (
+                          <span className="text-white/30 italic">Not set</span>
+                        )}
+                      </p>
                     </div>
                     <div>
-                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">Stream</label>
-                      <p className="text-white text-lg">{profile.stream || <span className="text-white/30 italic">Not set</span>}</p>
+                      <label className="block text-white/50 text-xs uppercase tracking-wider mb-1">
+                        Stream
+                      </label>
+                      <p className="text-white text-lg">
+                        {profile.stream || (
+                          <span className="text-white/30 italic">Not set</span>
+                        )}
+                      </p>
                     </div>
                     <div className="md:col-span-2 pt-4 border-t border-white/10">
                       {profile.isProfileComplete ? (
@@ -289,9 +336,35 @@ export default function ProfileClient({
                         </div>
                       ) : (
                         <div className="text-yellow flex items-center gap-2">
-                          <span>⚠️</span> Complete your profile to register for events
+                          <span>⚠️</span> Complete your profile to register for
+                          events
                         </div>
                       )}
+                    </div>
+                    <div className="md:col-span-2">
+                      <div className="flex justify-center mt-6 gap-4">
+                        <button
+                          onClick={() => {
+                            setFormData({
+                              fullName: profile.fullName,
+                              phoneNumber: profile.phoneNumber,
+                              college: profile.college,
+                              stream: profile.stream,
+                            });
+                            setIsEditing(true);
+                          }}
+                          className="hand-drawn-button px-6 py-2 bg-cyan text-black hover:bg-white"
+                        >
+                          Edit Details
+                        </button>
+
+                        <button
+                          onClick={() => signOut()}
+                          className="hand-drawn-button px-6 py-2 bg-cyan text-black hover:bg-white"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -299,11 +372,17 @@ export default function ProfileClient({
             )}
 
             {activeTab === "teams" && (
-              <HandDrawnCard className="p-6 sm:p-8 text-center min-h-[300px] flex flex-col items-center justify-center">
+              <HandDrawnCard className="p-6 sm:p-8 text-center min-h-75 flex flex-col items-center justify-center">
                 <div className="text-6xl mb-4">👥</div>
-                <h2 className="hand-drawn-title text-white text-2xl mb-2">My Teams</h2>
-                <p className="text-white/60">You haven't joined any teams yet.</p>
-                <button className="mt-6 hand-drawn-button px-6 py-2 text-sm">Create or Join Team</button>
+                <h2 className="hand-drawn-title text-white text-2xl mb-2">
+                  My Teams
+                </h2>
+                <p className="text-white/60">
+                  You haven't joined any teams yet.
+                </p>
+                <button className="mt-6 hand-drawn-button px-6 py-2 text-sm">
+                  Create or Join Team
+                </button>
               </HandDrawnCard>
             )}
 
@@ -358,9 +437,7 @@ export default function ProfileClient({
                 <h2 className="hand-drawn-title text-white text-xl sm:text-2xl mb-2">
                   Bored?
                 </h2>
-                <p className="text-cyan text-sm mb-4">
-                  Welcome to the Arcade!
-                </p>
+                <p className="text-cyan text-sm mb-4">Welcome to the Arcade!</p>
                 <button
                   type="button"
                   onClick={() => setGameOpen(true)}
