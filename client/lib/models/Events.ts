@@ -20,6 +20,22 @@ const eventSchema = new Schema({
         enum: ["Software", "Hardware", "Entrepreneurship"],
         required: true,
     },
+    date: {
+        type: String,
+        required: true
+    },
+    time: {
+        type: String,
+        required: true
+    },
+    duration: {
+        type: String,
+        required: true
+    },
+    venue: {
+        type: String,
+        required: true
+    },
     description: {
         type: String,
         required: true,
@@ -42,18 +58,30 @@ const eventSchema = new Schema({
         required: true,
         default: false
     },
-    spocs: [
+    pocs: [
         {
             name: {
                 type: String,
                 required: true
             },
-            contact: {
+            mobile: {
                 type: String,
                 required: true
             }
         }
     ],
+    membersPerTeam: {
+        type: Number,
+        required: true
+    },
+    isPaidEvent: {
+        type: Boolean,
+        required: true
+    },
+    fees: {
+        type: Number,
+        default: 0
+    },
     registrations: [
         {
             type: mongoose.Schema.Types.ObjectId,

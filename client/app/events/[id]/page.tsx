@@ -1,20 +1,22 @@
 'use client';
 
-import Navbar from '../components/Navbar';
+import Navbar from '../../components/Navbar';
 import { DotOrbit } from '@paper-design/shaders-react';
-import Crewmates from '../components/Crewmates';
+import Crewmates from '../../components/Crewmates';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useParams } from 'next/navigation';
 
-const Events = () => {
-	const [events, setEvents] = useState(null);
+const EventPage = () => {
+	const { id } = useParams();
+	const [event, setEvent] = useState(null);
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
-		const fetchEvents = async () => {
+		const fetchEventById = async () => {
 			setLoading(true);
 			try {
-				const res = await fetch("/api/events/get-all-events");
+				const res = await fetch(`/api/events/${id}`);
 				const data = await res.json().catch(() => ({}));
 
 				if (!res.ok) {
@@ -22,7 +24,7 @@ const Events = () => {
 					return;
 				}
 
-				setEvents(data);
+				setEvent(data);
 			} catch (error) {
 				if (error instanceof Error) {
 					toast.error(error.message);
@@ -35,10 +37,10 @@ const Events = () => {
 			}
 		};
 
-		fetchEvents();
+		fetchEventById();
 	}, []);
 
-	console.log({ loading, events });
+	console.log({ loading, event });
 
 	return (
 		<div className="w-full min-h-screen relative" data-main-content>
@@ -64,4 +66,4 @@ const Events = () => {
 	);
 };
 
-export default Events;
+export default EventPage;
