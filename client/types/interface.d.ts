@@ -164,8 +164,9 @@ export interface RegiEventProps {
   date: string;
   time: string;
   venue: string;
+  minMembersPerTeam?: number;
   maxMembersPerTeam?: number;
-  maxMembersPerTeam?: number;
+  isPaidEvent?: boolean;
 }
 
 export interface Registration {
@@ -191,6 +192,7 @@ export interface Team {
       };
   teamCode: string;
   teamName?: string;
+  paymentStatus?: "pending" | "completed" | "failed";
   team: (
     | string
     | {
