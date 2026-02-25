@@ -295,6 +295,7 @@ export interface EventDetails {
     isRegistered: boolean;
     isInTeam: boolean;
     verified: boolean;
+    registrationId?: string | null;
   };
   myTeam?: TeamDetails | null;
 }

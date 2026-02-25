@@ -101,6 +101,7 @@ export async function GET(
         isRegistered: Boolean(registration),
         isInTeam: Boolean(registration?.isInTeam),
         verified: Boolean(registration?.verified),
+        registrationId: registration?._id ? String(registration._id) : null,
       },
       myTeam,
     });

@@ -21,7 +21,6 @@ const EventPage = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Resolve id: useParams can be undefined on direct load/hydration, fallback to pathname
   const id = useMemo(() => {
     const fromParams = params?.id;
     if (typeof fromParams === "string") return fromParams;
@@ -53,7 +52,6 @@ const EventPage = () => {
       return;
     }
 
-    // Avoid flash: don't show loader if we already have this event (e.g. session refetch)
     const alreadyHaveEvent = event?._id === id;
     if (!alreadyHaveEvent) setLoading(true);
     let redirecting = false;
@@ -94,9 +92,6 @@ const EventPage = () => {
     fetchData();
   }, [id]);
 
-  // Ensure content stays visible: globals.css hides main when body has neither
-  // loader-ready nor loader-complete. Providers sets loader-complete for non-home
-  // pages, but we reinforce it when loading finishes to avoid any timing edge cases.
   useEffect(() => {
     if (!loading) {
       document.body.classList.add("loader-complete");
@@ -153,7 +148,11 @@ const EventPage = () => {
     let redirecting = false;
 
     try {
-      const registration = await fetch(`/api/registration/solo/${id}`, {
+      const endpoint = event.isPaidEvent
+        ? `/api/registration/solo/paid/${id}`
+        : `/api/registration/solo/${id}`;
+
+      const registration = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -175,7 +174,6 @@ const EventPage = () => {
     setRegistering(true);
     let redirecting = false;
 
-    // Route to the paid endpoint for paid team events, free endpoint otherwise
     const endpoint = event.isPaidEvent
       ? `/api/registration/team/paid/${id}`
       : `/api/registration/team/create/${id}`;
@@ -207,7 +205,6 @@ const EventPage = () => {
     let redirecting = false;
 
     try {
-      // Use paid endpoint for paid events, regular endpoint for free events
       const endpoint = event.isPaidEvent
         ? `/api/registration/team/paid/join/${id}`
         : `/api/registration/team/join/${id}`;
@@ -251,7 +248,38 @@ const EventPage = () => {
         return;
       }
 
-      // Open payment URL in new tab
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error((error as Error)?.message || "Failed to complete payment");
+    } finally {
+      setCompletingPayment(false);
+    }
+  };
+
+  const completeSoloPayment = async () => {
+    if (!id || !event?.userRegistration?.registrationId) return;
+
+    setCompletingPayment(true);
+
+    try {
+      const response = await fetch(
+        `/api/registration/solo/complete-payment/${event.userRegistration.registrationId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to complete payment");
+        return;
+      }
+
       if (data.paymentUrl) {
         window.open(data.paymentUrl, "_blank");
       }
@@ -292,7 +320,6 @@ const EventPage = () => {
     );
   }
 
-  // Only show invalid URL when we have neither id nor event (avoid flicker when id resolves late)
   if (!id && !event) {
     return (
       <div className="min-h-screen w-full bg-black text-white flex items-center justify-center">
@@ -307,7 +334,6 @@ const EventPage = () => {
     <div className="relative w-full min-h-screen overflow-hidden bg-black text-white font-sans selection:bg-red-500 selection:text-white">
       <Navbar />
 
-      {/* BACKGROUND ELEMENTS */}
       <div className="fixed inset-0 z-0 opacity-40 pointer-events-none">
         <DotOrbit
           width="100%"
@@ -323,24 +349,18 @@ const EventPage = () => {
         />
       </div>
 
-      {/* CREWMATES LAYER */}
       <div className="fixed inset-0 z-10 pointer-events-none">
         <Crewmates />
       </div>
 
-      {/* DIAL CAROUSEL (LEFT FIXED) */}
       {id && <DialCarousel events={allEvents} activeId={id} />}
 
-      {/* MAIN CONTENT LAYOUT */}
       <main className="relative z-20 pt-24 sm:pb-12 pb-20 px-4 w-full h-full flex flex-col items-center">
-        {/* TOP ROW: Back - Header - User Profile/Date */}
         <div className="w-full max-w-6xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
           <BackVentButton />
 
-          {/* Event Logo + Title */}
           <div className="flex-1 lg:pl-32 mt-10 flex justify-center md:justify-start">
             <div className="inline-flex items-center gap-3">
-              {/* Circular Wobbly Logo */}
               {event.banner && (
                 <div
                   className="w-20 h-20 md:w-28 md:h-28 rounded-full overflow-hidden border-3 border-white/60 shrink-0 bg-black/40"
@@ -359,7 +379,6 @@ const EventPage = () => {
             </div>
           </div>
 
-          {/* Date Box */}
           <div className="hidden md:block">
             <div
               className="border-2 border-white rounded-2xl px-6 py-3 bg-black/50 rotate-2 transform hover:rotate-0 transition-transform duration-300"
@@ -374,12 +393,9 @@ const EventPage = () => {
           </div>
         </div>
 
-        {/* MIDDLE ROW: Layout Grid */}
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* LEFT SPACER (For visual balance with Dial) */}
           <div className="hidden lg:block lg:col-span-1"></div>
 
-          {/* CENTER: Instructions / Description */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             <div className="block md:hidden mb-4">
               <div className="border-2 border-white rounded-xl px-4 py-2 bg-black/50 text-center">
@@ -503,7 +519,6 @@ const EventPage = () => {
                         })}
                       </div>
 
-                      {/* Complete Payment Button - Only for team leaders on paid events with pending/failed payment */}
                       {event.isPaidEvent &&
                         event.myTeam.isTeamLeader &&
                         event.myTeam.paymentStatus !== "completed" && (
@@ -558,6 +573,36 @@ const EventPage = () => {
                       </button>
                     </div>
                   )
+                ) : event.userRegistration?.isRegistered ? (
+                  event.isPaidEvent && !event.userRegistration?.verified ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-center">
+                        <button
+                          className="hand-drawn-button text-xl px-12 py-4 bg-yellow-600 hover:bg-yellow-700 w-full sm:w-auto"
+                          disabled={loading || completingPayment}
+                          onClick={completeSoloPayment}
+                        >
+                          {completingPayment ? (
+                            <div className="w-6 h-6 mx-10 border-4 border-red-100 border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            "COMPLETE PAYMENT"
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-center text-sm text-yellow-200">
+                        Payment pending - Complete payment to verify registration
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex justify-center">
+                      <button
+                        className="hand-drawn-button text-xl px-12 py-4 bg-green-600 hover:bg-green-700 w-full sm:w-auto cursor-not-allowed"
+                        disabled
+                      >
+                        REGISTERED
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <div className="flex justify-center">
                     <button
@@ -571,8 +616,6 @@ const EventPage = () => {
                     >
                       {registering ? (
                         <div className="w-6 h-6 mx-10 border-4 border-red-100 border-t-transparent rounded-full animate-spin" />
-                      ) : event.userRegistration?.isRegistered ? (
-                        "REGISTERED"
                       ) : (
                         "REGISTER"
                       )}
@@ -583,9 +626,7 @@ const EventPage = () => {
             </HandDrawnCard>
           </div>
 
-          {/* RIGHT COLUMN: Actions & Rules */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            {/* Rules Button/Card */}
             <button
               onClick={() => setShowRules(true)}
               className="group relative"
@@ -602,7 +643,6 @@ const EventPage = () => {
               </HandDrawnCard>
             </button>
 
-            {/* POC Button/Card */}
             {event.pocs && event.pocs.length > 0 && (
               <button
                 onClick={() => setShowPoc(true)}
@@ -621,7 +661,6 @@ const EventPage = () => {
               </button>
             )}
 
-            {/* Organized By Card */}
             {event.clubs && event.clubs.length > 0 && (
               <HandDrawnCard className="p-6 bg-purple-900/20 border-purple-300">
                 <p className="text-xs text-gray-400 uppercase tracking-widest mb-4 text-center">
@@ -665,7 +704,6 @@ const EventPage = () => {
         </div>
       </main>
 
-      {/* MODALS */}
       {showRules && (
         <RulesModal rules={event.rules} onClose={() => setShowRules(false)} />
       )}
