@@ -226,7 +226,12 @@ function SeminarModal({
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-t border-slate-700 pt-6 mb-6 text-sm text-slate-400">
           <div>
-            📅 {date.toLocaleDateString()} —{" "}
+            📅{" "}
+            {date.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}{" "}
+            —{" "}
             {date.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -238,9 +243,7 @@ function SeminarModal({
           </div>
         </div>
 
-        {!seminar.isPast ? (
-          null
-        ) : (
+        {!seminar.isPast ? null : (
           <div className="text-center text-red-500 font-bold text-lg">
             Event Ended
           </div>
