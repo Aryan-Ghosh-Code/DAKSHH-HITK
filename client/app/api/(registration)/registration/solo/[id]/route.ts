@@ -20,6 +20,20 @@ export async function POST(
         const { id } = await params;
         const event = await Event.findById(id) as IEventDocument;
 
+        if (!event) {
+            return NextResponse.json(
+                { error: "Event not found" },
+                { status: 400 }
+            );
+        }
+
+        if (event.registrations.length >= event.teamLimit!) {
+            return NextResponse.json(
+                { error: "Registration limit reached for this event" },
+                { status: 400 }
+            );
+        }
+
         const existingRegistration = await Registration.findOne({
             eventId: event._id,
             participant: session.user.id,

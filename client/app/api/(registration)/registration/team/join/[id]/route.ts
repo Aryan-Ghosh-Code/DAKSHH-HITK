@@ -35,6 +35,12 @@ export async function POST(
         if (!event) {
             return NextResponse.json({ error: "Event no longer exists" }, { status: 400 });
         }
+        if (event.registrations.length >= event.teamLimit!) {
+            return NextResponse.json(
+                { error: "Registration limit reached for this event" },
+                { status: 400 }
+            );
+        }
         if (!event.isActive) {
             return NextResponse.json({ error: "This event is not accepting registrations right now" }, { status: 400 });
         }
@@ -86,12 +92,10 @@ export async function POST(
         });
 
         targetTeam.team.push(user._id);
-        event.registrations.push(newRegistration._id);
 
         await Promise.all([
             newRegistration.save(),
-            targetTeam.save(),
-            event.save()
+            targetTeam.save()
         ]);
 
         return NextResponse.json({

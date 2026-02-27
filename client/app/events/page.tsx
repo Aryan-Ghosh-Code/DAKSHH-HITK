@@ -9,17 +9,18 @@ import CategoryDropdown, {
 } from "../components/Events/CategoryDropdown";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { Power } from "lucide-react";
 
 type PublicEvent = {
   _id: string;
   eventName: string;
   category:
-    | "Software"
-    | "Hardware"
-    | "Entrepreneurship"
-    | "Gaming"
-    | "Quiz"
-    | "Design and Prototyping";
+  | "Software"
+  | "Hardware"
+  | "Entrepreneurship"
+  | "Gaming"
+  | "Quiz"
+  | "Design and Prototyping";
   description: string;
   banner: string;
   clubs: string[];
@@ -27,6 +28,7 @@ type PublicEvent = {
   time: string;
   venue: string;
   isTeamEvent: boolean;
+  isActive: boolean;
   maxMembersPerTeam: number;
   minMembersPerTeam: number;
   prizePool: string;
@@ -39,6 +41,7 @@ export default function Events() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
+  const [showOnlyActive, setShowOnlyActive] = useState<boolean>(false);
 
   useEffect(() => {
     if (!loading && !displayLoading && events.length > 0) {
@@ -65,9 +68,12 @@ export default function Events() {
       const matchesCategory =
         selectedCategory === "All" ? true : ev.category === selectedCategory;
 
-      return matchesQuery && matchesCategory;
+      const matchesActive =
+        showOnlyActive ? ev.isActive === true : true;
+
+      return matchesQuery && matchesCategory && matchesActive;
     });
-  }, [events, searchQuery, selectedCategory]);
+  }, [events, searchQuery, selectedCategory, showOnlyActive]);
 
   async function getEvents(): Promise<PublicEvent[]> {
     setLoading(true);
@@ -163,6 +169,37 @@ export default function Events() {
           </p>
 
           <div className="mb-6 flex flex-col sm:flex-row gap-4 sm:items-center">
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/70">
+                Active Only
+              </span>
+
+              <button
+                onClick={() => setShowOnlyActive((prev) => !prev)}
+                className={`relative w-14 h-7 rounded-full transition-all duration-300
+      ${showOnlyActive ? "bg-green-500/30" : "bg-white/10"}
+    `}
+              >
+                {/* Track Glow */}
+                {showOnlyActive && (
+                  <div className="absolute inset-0 rounded-full shadow-[0_0_12px_rgba(34,197,94,0.6)]" />
+                )}
+
+                {/* Knob */}
+                <div
+                  className={`absolute top-1 left-1 w-5 h-5 rounded-full flex items-center justify-center
+        transition-all duration-300
+        ${showOnlyActive
+                      ? "translate-x-7 bg-green-400 text-black"
+                      : "translate-x-0 bg-white/70 text-black"
+                    }
+      `}
+                >
+                  <Power size={12} />
+                </div>
+              </button>
+            </div>
+
             <div className="w-full sm:w-64">
               <CategoryDropdown
                 value={selectedCategory}
@@ -208,6 +245,7 @@ export default function Events() {
                   time={ev.time}
                   venue={ev.venue}
                   isTeamEvent={ev.isTeamEvent}
+                  isActive={ev.isActive}
                   minMembersPerTeam={ev.minMembersPerTeam}
                   maxMembersPerTeam={ev.maxMembersPerTeam}
                   prizePool={ev.prizePool}

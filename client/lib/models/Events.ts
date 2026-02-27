@@ -87,6 +87,9 @@ const eventSchema = new Schema(
         type: Number,
         required: true
     },
+    teamLimit: {
+      type: Number
+    },
     isPaidEvent: {
       type: Boolean,
       required: true,

@@ -8,7 +8,7 @@ import connect from "@/lib/mongoose";
 import { NextResponse } from "next/server";
 
 export async function POST(
-    request: Request,
+    req: Request,
     { params }: { params: Promise<{ id: string }> },
 ) {
     try {
@@ -16,11 +16,26 @@ export async function POST(
         if (!session?.user?.id) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const { teamName } = await req.json();
 
         await connect();
 
         const { id } = await params;
         const event = await Event.findById(id) as IEventDocument;
+
+        if (!event) {
+            return NextResponse.json(
+                { error: "Event not found" },
+                { status: 400 }
+            );
+        }
+
+        if (event.registrations.length >= event.teamLimit!) {
+            return NextResponse.json(
+                { error: "Registration limit reached for this event" },
+                { status: 400 }
+            );
+        }
 
         const existingRegistration = await Registration.findOne({
             eventId: event._id,
@@ -34,7 +49,7 @@ export async function POST(
             );
         }
 
-        if(!event.isActive) {
+        if (!event.isActive) {
             return NextResponse.json({ error: "This event is not accepting registrations right now" }, { status: 400 });
         }
         if (!event.isTeamEvent) {
@@ -65,6 +80,7 @@ export async function POST(
         const newTeam = new Team({
             eventId: event._id,
             teamCode: newCode,
+            teamName: teamName || "",
             teamLeader: session.user.id,
             team: [session.user.id],
         });
@@ -81,7 +97,7 @@ export async function POST(
         }
 
         if (newRegistration) {
-            event.registrations.push(newRegistration._id);
+            event.registrations.push(newTeam._id);
             await Promise.all([newRegistration.save(), event.save(), newTeam.save()]);
         }
 

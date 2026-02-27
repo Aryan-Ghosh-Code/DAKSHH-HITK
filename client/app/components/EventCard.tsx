@@ -11,6 +11,7 @@ type LegacyProps = {
   title?: string;
   teams?: string;
   prizePool?: string;
+  isActive: boolean;
   featured?: boolean;
 };
 
@@ -28,6 +29,7 @@ export default function EventCard(props: Props) {
     time,
     venue,
     isTeamEvent,
+    isActive,
     minMembersPerTeam,
     maxMembersPerTeam,
     prizePool,
@@ -70,10 +72,18 @@ export default function EventCard(props: Props) {
       {/* Top Row: Club Name (Left) + Category (Right) */}
       <div className="flex justify-between items-center mb-4">
         {/* Club Name - Left Side */}
-        <span className="text-xs uppercase text-white/70">{displayClub}</span>
+        <div className="flex flex-col items-start gap-1.5">
+          <span className="text-xs uppercase text-white/70">{displayClub}</span>
+          {isActive && (
+            <div className="relative flex items-center justify-center">
+              <span className="absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75 animate-ping"></span>
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-green-400 shadow-[0_0_6px_rgba(34,197,94,0.6)]"></span>
+            </div>
+          )}
+        </div>
 
         {/* Category Badge - Right Side */}
-        <span className="text-[10px] sm:text-xs uppercase tracking-wider text-cyan px-2 py-1 border border-cyan rounded">
+        <span className="text-[10px]! sm:text-xs! uppercase tracking-wider text-center text-cyan px-2 py-1 border border-cyan rounded">
           {displayCategory}
         </span>
       </div>
