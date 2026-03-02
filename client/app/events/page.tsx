@@ -7,9 +7,10 @@ import EventCard from "../components/EventCard";
 import CategoryDropdown, {
   type Category,
 } from "../components/Events/CategoryDropdown";
+import GlobalRulesModal from "../components/Events/modals/GlobalRulesModal";
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Power } from "lucide-react";
+import { Power, ScrollText } from "lucide-react";
 
 type PublicEvent = {
   _id: string;
@@ -42,6 +43,7 @@ export default function Events() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<Category>("All");
   const [showOnlyActive, setShowOnlyActive] = useState<boolean>(false);
+  const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
 
   useEffect(() => {
     if (!loading && !displayLoading && events.length > 0) {
@@ -98,6 +100,14 @@ export default function Events() {
 
   useEffect(() => {
     getEvents().then(setEvents);
+  }, []);
+
+  // Show global rules modal on first visit
+  useEffect(() => {
+    if (!localStorage.getItem("events_rules_seen")) {
+      setShowRulesModal(true);
+      localStorage.setItem("events_rules_seen", "true");
+    }
   }, []);
 
   useEffect(() => {
@@ -220,6 +230,14 @@ export default function Events() {
                 className="hand-drawn-input w-full"
               />
             </div>
+
+            <button
+              onClick={() => setShowRulesModal(true)}
+              className="hand-drawn-button px-4 py-2 text-sm bg-red-600/80 hover:bg-red-600 border-red-400 flex items-center gap-2 whitespace-nowrap w-full sm:w-auto justify-center"
+            >
+              <ScrollText size={16} />
+              View Rules
+            </button>
           </div>
 
           {events.length === 0 ? (
@@ -254,6 +272,11 @@ export default function Events() {
             </div>
           )}
         </div>
+
+        <GlobalRulesModal
+          isOpen={showRulesModal}
+          onClose={() => setShowRulesModal(false)}
+        />
       </div>
     </div>
   );
