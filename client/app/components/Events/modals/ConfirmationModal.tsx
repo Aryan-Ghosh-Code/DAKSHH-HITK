@@ -81,7 +81,7 @@ const ConfirmationModal = ({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="hand-drawn-button flex-1 py-3 text-sm bg-indigo-600 hover:bg-indigo-500 flex items-center justify-center"
+            className="hand-drawn-button flex-1 py-3 text-sm! flex items-center justify-center"
           >
             {loading ? (
               <div className="w-5 h-5 border-4 border-indigo-100 border-t-transparent rounded-full animate-spin" />
