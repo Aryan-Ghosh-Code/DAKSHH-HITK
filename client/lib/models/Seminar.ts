@@ -13,7 +13,14 @@ const seminarSchema = new Schema(
     speakerBio: { type: String },
     description: { type: String },
     speakerNote: { type: String },
-    dateTime: { type: Date, required: true },
+    date: {
+      type: String,
+      required: true
+    },
+    time: {
+      type: String,
+      required: true
+    },
     mode: {
       type: String,
       enum: ["online", "offline"],
@@ -28,7 +35,7 @@ const seminarSchema = new Schema(
       ],
       default: [],
     },
-    venue: { type: String, required: true },
+    venue: { type: String },
   },
   {
     collection: "Seminar",
