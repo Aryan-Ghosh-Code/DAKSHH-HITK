@@ -50,4 +50,12 @@ export const partners: Partner[] = [
             "https://res.cloudinary.com/dnil7l0j1/image/upload/v1772567364/flutter_qbqwes.png",
         website_url: "https://in.linkedin.com/company/flutter-kolkata",
     },
+    {
+        id: "7",
+        partner_name: "AWS User Group Kolkata",
+        partner_type: "Community Partner",
+        logo_url:
+            "https://res.cloudinary.com/dnil7l0j1/image/upload/v1772631549/aws_j1xvg6.png",
+        website_url: "https://www.linkedin.com/company/awsugkol/",
+    },
 ];
