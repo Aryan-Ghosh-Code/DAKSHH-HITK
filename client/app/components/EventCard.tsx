@@ -52,6 +52,8 @@ export default function EventCard(props: Props) {
   }, [fullDescription]);
 
   const displayTitle = eventName ?? title ?? "Untitled Event";
+  // subtle visual priority
+  const isProto = displayTitle.toLowerCase().includes("protosprint") || displayTitle.toLowerCase().includes("vibe-a") || displayTitle.toLowerCase().includes("mé") || displayTitle.toLowerCase().includes("cyber quest") || displayTitle.toLowerCase().includes("modelfor");
   const displayCategory = category ?? "General";
   const clubList = Array.isArray(clubs)
     ? clubs
@@ -68,6 +70,10 @@ export default function EventCard(props: Props) {
   const card = (
     <HandDrawnCard
       className={`h-full flex flex-col ${featured ? "border-yellow border-2 sm:border-3 md:border-4" : ""} cursor-pointer`}
+      style={isProto ? {
+        boxShadow: '0 0 18px 2px rgba(255, 200, 120, 0.25), 0 0 40px 4px rgba(255, 170, 80, 0.04)',
+        animation: 'proto-breathe 4s ease-in-out infinite',
+      } : undefined}
     >
       {/* Top Row: Club Name (Left) + Category (Right) */}
       <div className="flex justify-between items-center mb-4">
@@ -144,7 +150,7 @@ export default function EventCard(props: Props) {
       </div>
 
       {/* Event Details Section - Vertical Stack */}
-      <div className="flex flex-col gap-2 mb-4">
+      <div className="flex flex-col gap-2 mb-4 mt-auto">
         {/* Date + Time (single row) */}
         {(date || time) && (
           <div className="flex items-center gap-2 flex-wrap">
@@ -279,12 +285,18 @@ export default function EventCard(props: Props) {
       {/* Bottom: Register Button */}
       <Link
         href={_id ? `/events/${String(_id)}` : "/events"}
-        className="block mt-auto"
+        className="block"
         onClick={() => {
           sessionStorage.setItem("eventsScrollPosition", window.scrollY.toString());
         }}
       >
-        <button className="hand-drawn-button w-full px-3 py-2 text-sm uppercase">
+        <button
+          className="hand-drawn-button w-full px-3 py-2 text-sm uppercase"
+          style={isProto ? {
+            background: 'rgba(255, 82, 82, 0.95)',
+            boxShadow: '0 0 12px 1px rgba(255, 120, 80, 0.12), 0 0 0 1.5px rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.3)',
+          } : undefined}
+        >
           Explore
         </button>
       </Link>

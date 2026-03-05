@@ -38,7 +38,7 @@ html {
   scroll-behavior: smooth;
 }
 
-::-webkit-scrollbar{
+::-webkit-scrollbar {
   display: none;
 }
 
@@ -505,9 +505,19 @@ footer h3 {
 
 /* Subtle wobble on focus - Among Us sus vibes */
 @keyframes input-wobble {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-0.5deg); }
-  75% { transform: rotate(0.5deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-0.5deg);
+  }
+
+  75% {
+    transform: rotate(0.5deg);
+  }
 }
 
 .hand-drawn-input:focus,
@@ -633,4 +643,17 @@ footer h3 {
 
 .animate-scaleIn {
   animation: scaleIn 0.2s ease-out;
+}
+
+/* subliminal card emphasis */
+@keyframes proto-breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.008);
+  }
 }
