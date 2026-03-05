@@ -31,7 +31,7 @@ const LeaderboardCard = ({ leaderboard }: LeaderBoardProps) => {
 									/>
 								)}
 								<span className="text-white font-medium truncate max-w-35 sm:max-w-50">
-									{entry.fullName || entry.username || "Anonymous"}
+									{entry.username}
 								</span>
 							</div>
 							<span className="text-[#fff675] font-bold shrink-0">

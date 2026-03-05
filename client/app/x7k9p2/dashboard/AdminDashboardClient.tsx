@@ -442,7 +442,7 @@ export default function AdminDashboardClient() {
                   <div className="flex items-center gap-3">
                     <span className="text-cyan font-bold w-10">#{i + 1}</span>
                     <span className="text-white font-medium">
-                      {entry.fullName || entry.username || "Anonymous"}
+                      {entry.username}
                     </span>
                   </div>
                   <span className="text-[#fff675] font-bold">{entry.amongUsScore}</span>
