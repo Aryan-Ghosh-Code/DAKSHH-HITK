@@ -22,5 +22,13 @@ export const announcements: Announcement[] = [
         messages: [
             "All participants registering for paid events are requested to use the SAME EMAIL ADDRESS and EXACTLY SAME TEAM NAME for payment that they used to log into our platform and create a team/register in an event."
         ],
+    },
+    {
+        id: "3",
+        event_name: "Dakshh 2026 Registrations",
+        club_name: "Dakshh Org Comm",
+        messages: [
+            "Participants may register for multiple events even if their timings clash. Allocation of appropriate time slots for such participants will be managed by the Event Heads and the Organizing Committee, subject to feasibility."
+        ],
     }
 ];
