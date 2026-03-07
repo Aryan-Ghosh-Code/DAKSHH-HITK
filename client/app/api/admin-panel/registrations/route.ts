@@ -82,7 +82,7 @@ export async function GET(request: Request) {
       .lean();
 
     const events = await Event.find({})
-      .select("_id eventName")
+      .select("_id eventName minMembersPerTeam")
       .sort({ eventName: 1 })
       .lean();
 
@@ -165,6 +165,7 @@ export async function GET(request: Request) {
       events: events.map((e) => ({
         id: String((e as { _id?: unknown })._id ?? ""),
         eventName: (e as { eventName?: string }).eventName ?? "",
+        minMembersPerTeam: (e as { minMembersPerTeam?: number }).minMembersPerTeam ?? 1,
       })),
     });
   } catch (err) {

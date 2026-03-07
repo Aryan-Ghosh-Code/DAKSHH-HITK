@@ -58,6 +58,7 @@ interface RegistrationRow {
 interface EventOption {
   id: string;
   eventName: string;
+  minMembersPerTeam?: number;
 }
 
 interface AdminRegistrationsClientProps {
@@ -575,6 +576,15 @@ export default function AdminRegistrationsClient({
                 <div className="text-sm text-cyan mb-3">{team.eventName}</div>
                 
                 <div className="flex flex-wrap gap-2 text-xs">
+                  {(() => {
+                    const minRequired = events.find((e) => e.eventName === team.eventName)?.minMembersPerTeam ?? 1;
+                    const isIncomplete = team.members.length < minRequired;
+                    return isIncomplete ? (
+                      <span className="bg-amber-500/30 text-amber-300 px-2 py-1 rounded font-semibold">
+                        INCOMPLETE
+                      </span>
+                    ) : null;
+                  })()}
                   <span className="bg-white/5 px-2 py-1 rounded text-white/70">
                     👥 {team.members.length} members
                   </span>
