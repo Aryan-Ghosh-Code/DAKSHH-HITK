@@ -11,15 +11,18 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/genai": "^1.44.0",
     "@paper-design/shaders-react": "^0.0.71",
     "@react-email/render": "^2.0.4",
     "@tailwindcss/postcss": "^4.1.18",
+    "@uiw/react-md-editor": "^4.0.11",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.34.0",
     "i": "^0.3.7",
     "lucide-react": "^0.564.0",
+    "marked": "^15.0.0",
     "mongoose": "^8.8.4",
     "next": "16.1.6",
     "next-auth": "^5.0.0-beta.30",

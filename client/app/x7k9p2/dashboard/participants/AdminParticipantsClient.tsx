@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import HandDrawnCard from "@/app/components/HandDrawnCard";
 import { useAmongUsToast } from "@/app/components/ui/among-us-toast";
+import { getAdminBasePath } from "@/lib/admin-config";
+import { Mail } from "lucide-react";
 
 const USER_ROLES = ["participant", "volunteer", "admin", "super_admin"] as const;
 
@@ -39,6 +42,8 @@ export default function AdminParticipantsClient({
   const [sortKey, setSortKey] = useState<keyof ParticipantRow | "rolesStr" | null>("username");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const toast = useAmongUsToast();
+  const router = useRouter();
+  const basePath = getAdminBasePath();
 
   const handleSort = (key: keyof ParticipantRow | "rolesStr") => {
     setSortKey(key);
@@ -193,9 +198,7 @@ export default function AdminParticipantsClient({
                   <SortTh col="amongUsScore" label="Score" />
                   <SortTh col="verified" label="Verified" />
                   <SortTh col="rolesStr" label="Roles" />
-                  {canWrite && (
-                    <th className="py-2 text-cyan font-semibold">Actions</th>
-                  )}
+                  <th className="py-2 text-cyan font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -334,54 +337,69 @@ export default function AdminParticipantsClient({
                         p.roles.join(", ") || "-"
                       )}
                     </td>
-                    {canWrite && (
-                      <td className="py-2">
-                        {editingId === p.id ? (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleUpdate(p.id)}
-                              disabled={submitting}
-                              className="hand-drawn-button py-1 px-2 text-sm disabled:opacity-60"
-                            >
-                              Save
-                            </button>
+                    <td className="py-2">
+                      <div className="flex gap-2 items-center">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/${basePath}/dashboard/mail?participant=${encodeURIComponent(p.id)}`
+                            )
+                          }
+                          className="hand-drawn-button py-1 px-2 text-sm flex items-center gap-1"
+                          style={{ background: "rgba(0, 0, 0, 0.7)" }}
+                          title="Email participant"
+                        >
+                          <Mail size={14} />
+                          Email
+                        </button>
+                        {canWrite &&
+                          (editingId === p.id ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdate(p.id)}
+                                disabled={submitting}
+                                className="hand-drawn-button py-1 px-2 text-sm disabled:opacity-60"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingId(null);
+                                  setEditForm({});
+                                }}
+                                className="py-1 px-2 text-white/70 text-sm hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
                             <button
                               type="button"
                               onClick={() => {
-                                setEditingId(null);
-                                setEditForm({});
+                                setEditingId(p.id);
+                                setEditForm({
+                                  username: p.username,
+                                  fullName: p.fullName,
+                                  phoneNumber: p.phoneNumber,
+                                  college: p.college,
+                                  stream: p.stream,
+                                  avatar: p.avatar,
+                                  amongUsScore: p.amongUsScore,
+                                  verified: p.verified,
+                                  roles: [...p.roles],
+                                });
                               }}
-                              className="py-1 px-2 text-white/70 text-sm hover:text-white"
+                              className="hand-drawn-button py-1 px-2 text-sm"
+                              style={{ background: "rgba(0, 0, 0, 0.7)" }}
                             >
-                              Cancel
+                              Edit
                             </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingId(p.id);
-                              setEditForm({
-                                username: p.username,
-                                fullName: p.fullName,
-                                phoneNumber: p.phoneNumber,
-                                college: p.college,
-                                stream: p.stream,
-                                avatar: p.avatar,
-                                amongUsScore: p.amongUsScore,
-                                verified: p.verified,
-                                roles: [...p.roles],
-                              });
-                            }}
-                            className="hand-drawn-button py-1 px-2 text-sm"
-                            style={{ background: "rgba(0, 0, 0, 0.7)" }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </td>
-                    )}
+                          ))}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import HandDrawnCard from "@/app/components/HandDrawnCard";
 import { useAmongUsToast } from "@/app/components/ui/among-us-toast";
+import { getAdminBasePath } from "@/lib/admin-config";
+import { Mail } from "lucide-react";
 import * as XLSX from "xlsx";
 
 import TeamDetailsModal from "./TeamDetailsModal";
@@ -75,6 +78,7 @@ export default function AdminRegistrationsClient({
   const [eventFilter, setEventFilter] = useState("");
   const [verifiedFilter, setVerifiedFilter] = useState("");
   const [checkedInFilter, setCheckedInFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editVerified, setEditVerified] = useState(false);
@@ -90,7 +94,52 @@ export default function AdminRegistrationsClient({
   } | null>(null);
   const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
+  const [selectedRegIds, setSelectedRegIds] = useState<Set<string>>(new Set());
+  const [selectedTeamCodes, setSelectedTeamCodes] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   const toast = useAmongUsToast();
+
+  const toggleSelectionMode = () => {
+    setSelectionMode((prev) => !prev);
+    if (selectionMode) {
+      setSelectedRegIds(new Set());
+      setSelectedTeamCodes(new Set());
+    }
+  };
+  const router = useRouter();
+  const basePath = getAdminBasePath();
+
+  const toggleRegSelection = (id: string) => {
+    setSelectedRegIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleTeamSelection = (code: string) => {
+    setSelectedTeamCodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  };
+
+  const handleEmailSelected = () => {
+    const participantIds = Array.from(selectedRegIds)
+      .map((id) => {
+        const reg = registrations.find((r) => r.id === id);
+        return reg?.participantId;
+      })
+      .filter(Boolean) as string[];
+    const teamCodes = Array.from(selectedTeamCodes);
+    const params = new URLSearchParams();
+    if (participantIds.length) params.set("participants", participantIds.join(","));
+    if (teamCodes.length) params.set("teams", teamCodes.join(","));
+    router.push(`/${basePath}/dashboard/mail?${params}`);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -107,7 +156,31 @@ export default function AdminRegistrationsClient({
     setSortDir((prev) => (sortKey === key ? (prev === "asc" ? "desc" : "asc") : "asc"));
   };
 
-  const sortedRegistrations = [...registrations].sort((a, b) => {
+  // Status filter: complete = solo or team with enough members; incomplete = team with fewer than min
+  const filteredByStatus = useMemo(() => {
+    if (!statusFilter) return registrations;
+    const teamMemberCount = new Map<string, number>();
+    registrations.forEach((r) => {
+      if (r.isInTeam && r.teamCode) {
+        teamMemberCount.set(r.teamCode, (teamMemberCount.get(r.teamCode) ?? 0) + 1);
+      }
+    });
+    const minForEvent = new Map<string, number>();
+    events.forEach((e) => {
+      minForEvent.set(e.eventName, e.minMembersPerTeam ?? 1);
+    });
+    return registrations.filter((reg) => {
+      if (!reg.isInTeam || !reg.teamCode) {
+        return statusFilter === "complete"; // solo = complete
+      }
+      const count = teamMemberCount.get(reg.teamCode) ?? 0;
+      const min = minForEvent.get(reg.eventName) ?? 1;
+      const isComplete = count >= min;
+      return statusFilter === "complete" ? isComplete : !isComplete;
+    });
+  }, [registrations, events, statusFilter]);
+
+  const sortedRegistrations = [...filteredByStatus].sort((a, b) => {
     const key = sortKey ?? "eventName";
     let va: string | number | boolean | null;
     let vb: string | number | boolean | null;
@@ -204,6 +277,7 @@ export default function AdminRegistrationsClient({
   };
 
   const getTeamStats = () => {
+    const source = statusFilter ? filteredByStatus : registrations;
     const teamsMap: Record<
       string,
       {
@@ -214,7 +288,7 @@ export default function AdminRegistrationsClient({
       }
     > = {};
 
-    registrations.forEach((reg) => {
+    source.forEach((reg) => {
       if (reg.isInTeam && reg.teamCode) {
         if (!teamsMap[reg.teamCode]) {
           teamsMap[reg.teamCode] = {
@@ -413,79 +487,8 @@ export default function AdminRegistrationsClient({
         <h2 className="hand-drawn-title text-white text-2xl mb-4">
           Registrations
         </h2>
-        <div className="flex flex-wrap gap-4 mb-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-cyan text-sm font-semibold">
-              View Mode
-            </label>
-            <div className="flex bg-black/40 rounded p-1 border border-white/20 h-[42px]">
-              <button
-                onClick={() => setViewMode("list")}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
-                  viewMode === "list"
-                    ? "bg-cyan text-white font-bold"
-                    : "text-white/70 hover:text-white"
-                }`}
-              >
-                List
-              </button>
-              <button
-                onClick={() => setViewMode("teams")}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
-                  viewMode === "teams"
-                    ? "bg-cyan text-white font-bold"
-                    : "text-white/70 hover:text-white"
-                }`}
-              >
-                Teams
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-cyan text-sm font-semibold mb-1">
-              Event
-            </label>
-            <select
-              value={eventFilter}
-              onChange={(e) => setEventFilter(e.target.value)}
-              className="hand-drawn-select"
-            >
-              <option value="">All events</option>
-              {events.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.eventName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-cyan text-sm font-semibold mb-1">
-              Verified
-            </label>
-            <select
-              value={verifiedFilter}
-              onChange={(e) => setVerifiedFilter(e.target.value)}
-              className="hand-drawn-select"
-            >
-              <option value="">All</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-cyan text-sm font-semibold mb-1">
-              Checked in
-            </label>
-            <select
-              value={checkedInFilter}
-              onChange={(e) => setCheckedInFilter(e.target.value)}
-              className="hand-drawn-select"
-            >
-              <option value="">All</option>
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
-          </div>
+        <div className="flex flex-col gap-4 mb-4">
+          {/* Row 1: Search bar full width */}
           <div>
             <label className="block text-cyan text-sm font-semibold mb-1">
               Search (email/name)
@@ -494,84 +497,255 @@ export default function AdminRegistrationsClient({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="hand-drawn-input"
+              className="hand-drawn-input w-full"
               placeholder="Search..."
             />
           </div>
 
-          <div className="relative flex flex-col ml-auto" ref={exportDropdownRef}>
-            <span className="block text-sm font-semibold mb-1 invisible select-none" aria-hidden="true">
-              &nbsp;
-            </span>
-            <button
-              type="button"
-              onClick={() => setExportDropdownOpen((o) => !o)}
-              className="hand-drawn-button min-w-[140px] px-5 py-3 text-base"
-            >
-              Export
-            </button>
-            {exportDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded border border-white/20 bg-black/95 py-1 shadow-lg">
+          {/* Row 2: Filters and actions */}
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex flex-col gap-1">
+              <label className="text-cyan text-sm font-semibold">
+                View Mode
+              </label>
+              <div className="flex bg-black/40 rounded p-1 border border-white/20 h-[42px]">
                 <button
-                  type="button"
-                  onClick={handleExportCSV}
-                  className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10"
+                  onClick={() => setViewMode("list")}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    viewMode === "list"
+                      ? "bg-cyan text-white font-bold"
+                      : "text-white/70 hover:text-white"
+                  }`}
                 >
-                  Export as CSV
+                  List
                 </button>
                 <button
-                  type="button"
-                  onClick={handleExportXLSX}
-                  className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10"
+                  onClick={() => setViewMode("teams")}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    viewMode === "teams"
+                      ? "bg-cyan text-white font-bold"
+                      : "text-white/70 hover:text-white"
+                  }`}
                 >
-                  Export as XLSX
+                  Teams
                 </button>
               </div>
+            </div>
+            <div>
+              <label className="block text-cyan text-sm font-semibold mb-1">
+                Event
+              </label>
+              <select
+                value={eventFilter}
+                onChange={(e) => setEventFilter(e.target.value)}
+                className="hand-drawn-select"
+              >
+                <option value="">All events</option>
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.eventName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-cyan text-sm font-semibold mb-1">
+                Verified
+              </label>
+              <select
+                value={verifiedFilter}
+                onChange={(e) => setVerifiedFilter(e.target.value)}
+                className="hand-drawn-select"
+              >
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-cyan text-sm font-semibold mb-1">
+                Checked in
+              </label>
+              <select
+                value={checkedInFilter}
+                onChange={(e) => setCheckedInFilter(e.target.value)}
+                className="hand-drawn-select"
+              >
+                <option value="">All</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+            <div className="w-22">
+              <label className="block text-cyan text-sm font-semibold mb-1">
+                Status
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="hand-drawn-select"
+              >
+                <option value="">All</option>
+                <option value="complete">Complete</option>
+                <option value="incomplete">Incomplete</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={toggleSelectionMode}
+              className={`hand-drawn-button ${selectionMode ? "bg-cyan/30" : ""}`}
+            >
+              {selectionMode ? "Done" : "Select"}
+            </button>
+
+            <div className="relative flex flex-col ml-auto" ref={exportDropdownRef}>
+              <span className="block text-sm font-semibold mb-1 invisible select-none" aria-hidden="true">
+                &nbsp;
+              </span>
+              <button
+                type="button"
+                onClick={() => setExportDropdownOpen((o) => !o)}
+                className="hand-drawn-button min-w-[140px] px-5 py-3 text-base"
+              >
+                Export
+              </button>
+              {exportDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 z-50 min-w-[160px] rounded border border-white/20 bg-black/95 py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10"
+                  >
+                    Export as CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportXLSX}
+                    className="block w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10"
+                  >
+                    Export as XLSX
+                  </button>
+                </div>
+              )}
+            </div>
+            {selectionMode && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (viewMode === "list") {
+                      const allSelected = sortedRegistrations.every((r) => selectedRegIds.has(r.id));
+                      if (allSelected) {
+                        setSelectedRegIds(new Set());
+                        setSelectedTeamCodes(new Set());
+                      } else {
+                        setSelectedRegIds(new Set(sortedRegistrations.map((r) => r.id)));
+                        setSelectedTeamCodes(new Set());
+                      }
+                    } else {
+                      const teams = getTeamStats();
+                      const allSelected = teams.every((t) => selectedTeamCodes.has(t.teamCode));
+                      if (allSelected) {
+                        setSelectedRegIds(new Set());
+                        setSelectedTeamCodes(new Set());
+                      } else {
+                        setSelectedRegIds(new Set());
+                        setSelectedTeamCodes(new Set(teams.map((t) => t.teamCode)));
+                      }
+                    }
+                  }}
+                  className="hand-drawn-button"
+                >
+                  {viewMode === "list"
+                    ? sortedRegistrations.every((r) => selectedRegIds.has(r.id))
+                      ? "Deselect all"
+                      : "Select all"
+                    : getTeamStats().every((t) => selectedTeamCodes.has(t.teamCode))
+                      ? "Deselect all"
+                      : "Select all"}
+                </button>
+                {(selectedRegIds.size > 0 || selectedTeamCodes.size > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleEmailSelected}
+                    className="hand-drawn-button flex items-center gap-2"
+                    style={{ background: "rgba(0, 200, 200, 0.2)" }}
+                  >
+                    <Mail size={18} />
+                    Email selected (
+                {selectedTeamCodes.size > 0 && (
+                  <>{selectedTeamCodes.size} teams</>
+                )}
+                {selectedTeamCodes.size > 0 && selectedRegIds.size > 0 && ", "}
+                {selectedRegIds.size > 0 && (
+                  <>{selectedRegIds.size} participants</>
+                )}
+                )
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
         {!loading && registrations.length > 0 && (
           <div className="flex flex-wrap gap-4 mb-4 p-3 rounded bg-black/20 border border-white/10">
             <div className="text-cyan font-semibold">
-              Total: <span className="text-white">{registrations.length}</span>
+              Total: <span className="text-white">{filteredByStatus.length}</span>
             </div>
             <div className="text-cyan font-semibold">
-              Verified: <span className="text-white">{registrations.filter((r) => r.verified).length}</span>
+              Verified: <span className="text-white">{filteredByStatus.filter((r) => r.verified).length}</span>
             </div>
             <div className="text-cyan font-semibold">
-              Checked in: <span className="text-white">{registrations.filter((r) => r.checkedIn).length}</span>
+              Checked in: <span className="text-white">{filteredByStatus.filter((r) => r.checkedIn).length}</span>
             </div>
             <div className="text-cyan font-semibold">
-              Unique teams: <span className="text-white">{new Set(registrations.filter((r) => r.isInTeam && r.teamCode).map((r) => r.teamCode)).size}</span>
+              Unique teams: <span className="text-white">{new Set(filteredByStatus.filter((r) => r.isInTeam && r.teamCode).map((r) => r.teamCode)).size}</span>
             </div>
             <div className="text-cyan font-semibold">
-              In team: <span className="text-white">{registrations.filter((r) => r.isInTeam).length}</span>
+              In team: <span className="text-white">{filteredByStatus.filter((r) => r.isInTeam).length}</span>
             </div>
             <div className="text-cyan font-semibold">
-              Solo: <span className="text-white">{registrations.filter((r) => !r.isInTeam).length}</span>
+              Solo: <span className="text-white">{filteredByStatus.filter((r) => !r.isInTeam).length}</span>
             </div>
           </div>
         )}
         {loading ? (
           <p className="text-white/70">Loading...</p>
-        ) : registrations.length === 0 ? (
+        ) : filteredByStatus.length === 0 ? (
           <p className="text-white/70">No registrations found.</p>
         ) : viewMode === "teams" ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getTeamStats().map((team) => (
               <div
                 key={team.teamCode}
-                onClick={() => handleTeamClick(team)}
-                className="bg-white/5 border border-white/10 rounded-lg p-4 cursor-pointer hover:bg-white/10 transition-all hover:scale-[1.02] group"
+                className="bg-white/5 border border-white/10 rounded-lg p-4 hover:bg-white/10 transition-all group"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg text-white group-hover:text-cyan transition-colors truncate pr-2">
-                    {team.teamName || "Unnamed Team"}
-                  </h3>
-                  <span className="text-xs font-mono bg-white/10 px-2 py-1 rounded text-white/60">
-                    {team.teamCode}
-                  </span>
-                </div>
+                <div className="flex items-start gap-2 mb-2">
+                  {selectionMode && (
+                    <input
+                      type="checkbox"
+                      checked={selectedTeamCodes.has(team.teamCode)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleTeamSelection(team.teamCode);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-1 shrink-0"
+                    />
+                  )}
+                  <div
+                    className="flex-1 cursor-pointer min-w-0"
+                    onClick={() => handleTeamClick(team)}
+                  >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-bold text-lg text-white group-hover:text-cyan transition-colors truncate pr-2">
+                      {team.teamName || "Unnamed Team"}
+                    </h3>
+                    <span className="text-xs font-mono bg-white/10 px-2 py-1 rounded text-white/60">
+                      {team.teamCode}
+                    </span>
+                  </div>
                 
                 <div className="text-sm text-cyan mb-3">{team.eventName}</div>
                 
@@ -597,6 +771,22 @@ export default function AdminRegistrationsClient({
                     </span>
                   )}
                 </div>
+                </div>
+                </div>
+                <div className="mt-2 pt-2 border-t border-white/10 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/${basePath}/dashboard/mail?team=${encodeURIComponent(team.teamCode)}`);
+                    }}
+                    className="hand-drawn-button py-1 px-2 text-sm flex items-center gap-1 flex-1 justify-center"
+                    style={{ background: "rgba(0, 0, 0, 0.7)" }}
+                  >
+                    <Mail size={14} />
+                    Email
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -605,6 +795,27 @@ export default function AdminRegistrationsClient({
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b-2 border-white/30">
+                  {selectionMode && (
+                    <th className="py-2 pr-2 text-cyan font-semibold w-10">
+                      <input
+                        type="checkbox"
+                        checked={
+                          sortedRegistrations.length > 0 &&
+                          sortedRegistrations.every((r) => selectedRegIds.has(r.id))
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedRegIds(
+                              new Set(sortedRegistrations.map((r) => r.id))
+                            );
+                          } else {
+                            setSelectedRegIds(new Set());
+                          }
+                        }}
+                        aria-label="Select all"
+                      />
+                    </th>
+                  )}
                   <SortTh col="eventName" label="Event" />
                   <SortTh col="createdAt" label="Registered at" />
                   <SortTh col="participant" label="Participant" />
@@ -614,14 +825,22 @@ export default function AdminRegistrationsClient({
                   <SortTh col="checkedIn" label="Checked in" />
                   <SortTh col="checkedInAt" label="Checked in at" />
                   <SortTh col="foodServedCount" label="Food" />
-                  {canWrite && (
-                    <th className="py-2 text-cyan font-semibold">Actions</th>
-                  )}
+                  <th className="py-2 text-cyan font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedRegistrations.map((reg) => (
                   <tr key={reg.id} className="border-b border-white/10">
+                    {selectionMode && (
+                      <td className="py-2 pr-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedRegIds.has(reg.id)}
+                          onChange={() => toggleRegSelection(reg.id)}
+                          aria-label={`Select ${reg.participantName || reg.participantEmail}`}
+                        />
+                      </td>
+                    )}
                     <td className="py-2 pr-3 text-white">{reg.eventName}</td>
                     <td className="py-2 pr-3 text-white/70 text-xs">
                       {reg.createdAt
@@ -718,38 +937,53 @@ export default function AdminRegistrationsClient({
                         reg.foodServedCount
                       )}
                     </td>
-                    {canWrite && (
-                      <td className="py-2">
-                        {editingId === reg.id ? (
-                          <div className="flex gap-2">
+                    <td className="py-2">
+                      <div className="flex gap-2 items-center">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            router.push(
+                              `/${basePath}/dashboard/mail?participant=${encodeURIComponent(reg.participantId)}`
+                            )
+                          }
+                          className="hand-drawn-button py-1 px-2 text-sm flex items-center gap-1"
+                          style={{ background: "rgba(0, 0, 0, 0.7)" }}
+                          title="Email participant"
+                        >
+                          <Mail size={14} />
+                          Email
+                        </button>
+                        {canWrite &&
+                          (editingId === reg.id ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleUpdate(reg.id)}
+                                disabled={submitting}
+                                className="hand-drawn-button py-1 px-2 text-sm disabled:opacity-60"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingId(null)}
+                                className="py-1 px-2 text-white/70 text-sm hover:text-white"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
                             <button
                               type="button"
-                              onClick={() => handleUpdate(reg.id)}
-                              disabled={submitting}
-                              className="hand-drawn-button py-1 px-2 text-sm disabled:opacity-60"
+                              onClick={() => startEdit(reg)}
+                              className="hand-drawn-button py-1 px-2 text-sm"
+                              style={{ background: "rgba(0, 0, 0, 0.7)" }}
                             >
-                              Save
+                              Edit
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingId(null)}
-                              className="py-1 px-2 text-white/70 text-sm hover:text-white"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => startEdit(reg)}
-                            className="hand-drawn-button py-1 px-2 text-sm"
-                            style={{ background: "rgba(0, 0, 0, 0.7)" }}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </td>
-                    )}
+                          ))}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

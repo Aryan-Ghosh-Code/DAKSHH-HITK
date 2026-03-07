@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import HandDrawnCard from "@/app/components/HandDrawnCard";
+import { getAdminBasePath } from "@/lib/admin-config";
 
 interface TeamMember {
   id: string;
@@ -34,6 +36,8 @@ export default function TeamDetailsModal({
 }: TeamDetailsModalProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const basePath = getAdminBasePath();
 
   useEffect(() => {
     setMounted(true);
@@ -163,9 +167,25 @@ export default function TeamDetailsModal({
             </div>
           </div>
 
-          {/* Footer Decoration */}
-          <div className="mt-6 text-center text-white/30 text-xs italic shrink-0">
-            Who is the imposter?
+          {/* Footer */}
+          <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                router.push(
+                  `/${basePath}/dashboard/mail?team=${encodeURIComponent(team.teamCode)}`
+                );
+              }}
+              className="hand-drawn-button py-2 px-4 flex items-center gap-2"
+              style={{ background: "rgba(0, 200, 200, 0.2)" }}
+            >
+              <Mail size={18} />
+              Email team
+            </button>
+            <span className="text-white/30 text-xs italic">
+              Who is the imposter?
+            </span>
           </div>
         </HandDrawnCard>
       </div>

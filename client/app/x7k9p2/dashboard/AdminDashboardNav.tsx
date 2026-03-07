@@ -52,6 +52,11 @@ export default function AdminDashboardNav({
       show: hasPermission(session, "registrations"),
     },
     {
+      href: `${base}/mail`,
+      label: "Mail",
+      show: hasPermission(session, "registrations"),
+    },
+    {
       href: `${base}/events`,
       label: "Events",
       show: hasPermission(session, "events"),

@@ -1,8 +1,10 @@
 import { Resend } from "resend";
+import { render } from "@react-email/render";
 import { EmailTemplate } from "@/components/email-template";
 import { OtpEmailTemplate } from "@/components/otp-email-template";
 import { AdminInviteEmailTemplate } from "@/components/admin-invite-email-template";
 import { SeminarConfirmationEmailTemplate } from "@/components/seminar-confirmation-email-template";
+import { CustomMailTemplate } from "@/components/custom-mail-template";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const onboardingFrom = "Dakshh Team <onboarding@dakshh-hitk.com>";
@@ -66,5 +68,19 @@ export async function sendSeminarConfirmationEmail(
     to: [to],
     subject: `Registration for Seminar Confirmed: ${params.seminarTitle} — Dakshh 2026`,
     react: SeminarConfirmationEmailTemplate(params),
+  });
+}
+
+export async function sendCustomMail(
+  to: string[],
+  subject: string,
+  htmlBody: string
+) {
+  const html = await render(CustomMailTemplate({ htmlContent: htmlBody }));
+  return resend.emails.send({
+    from: onboardingFrom,
+    to,
+    subject,
+    html,
   });
 }
