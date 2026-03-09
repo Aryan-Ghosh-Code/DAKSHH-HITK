@@ -14,7 +14,7 @@ export async function GET() {
             );
         }
 
-        return NextResponse.json({ users }, { status: 200 });
+        return NextResponse.json({ users: users.length }, { status: 200 });
     } catch (error) {
         console.error("Fetch Event Error:", error);
         return NextResponse.json(
