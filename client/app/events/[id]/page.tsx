@@ -101,7 +101,7 @@ const EventPage = () => {
     fetch("/api/events/unstop-links")
       .then((res) => (res.ok ? res.json() : {}))
       .then((data: Record<string, string>) => setUnstopLinks(data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -515,7 +515,7 @@ const EventPage = () => {
                 ) : (
                   /* ── ORIGINAL REGISTRATION UI (kept, not removed) ── */
                   <>
-                    {!event.isActive ? (
+                    {!event.isActive && !event.userRegistration?.isRegistered ? (
                       <div className="flex justify-center">
                         <button
                           className="hand-drawn-button text-xl px-12 py-4 cursor-not-allowed w-full sm:w-auto opacity-80"
@@ -651,24 +651,25 @@ const EventPage = () => {
                         </div>
                       )
                     ) : (
-                      <div className="flex justify-center">
-                        <button
-                          className="hand-drawn-button text-xl px-12 py-4 bg-red-600 hover:bg-red-700 w-full sm:w-auto"
-                          disabled={
-                            loading ||
-                            registering ||
-                            Boolean(event.userRegistration?.isRegistered)
-                          }
-                          onClick={openSoloConfirmation}
-                        >
-                          {registering ? (
-                            <div className="w-6 h-6 mx-10 border-4 border-red-100 border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            "REGISTER"
-                          )}
-                        </button>
-                      </div>
-                    )}
+                      event.isActive && (
+                        <div className="flex justify-center">
+                          <button
+                            className="hand-drawn-button text-xl px-12 py-4 bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+                            disabled={
+                              loading ||
+                              registering ||
+                              Boolean(event.userRegistration?.isRegistered)
+                            }
+                            onClick={openSoloConfirmation}
+                          >
+                            {registering ? (
+                              <div className="w-6 h-6 mx-10 border-4 border-red-100 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              "REGISTER"
+                            )}
+                          </button>
+                        </div>
+                      ))}
                   </>
                 )}
               </div>
