@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import jsQR from "jsqr";
 
 interface VolunteerEvent {
   _id: string;
@@ -136,18 +137,26 @@ export default function AdminCheckInClient({
         }
       ).BarcodeDetector;
 
-      if (!BarcodeDetectorCtor) {
-        setScanError(
-          "QR camera scan is not supported in this browser. Use Chrome/Edge on HTTPS.",
-        );
-        return;
-      }
+      // BarcodeDetector is Chromium-only — we fall back to jsQR for Firefox/Safari/iOS
+      const nativeDetector = BarcodeDetectorCtor
+        ? new BarcodeDetectorCtor({ formats: ["qr_code"] })
+        : null;
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
+        // First attempt: prefer rear camera (phones). Fall back to any camera (laptops).
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: "environment" } },
+            audio: false,
+          });
+        } catch {
+          // Desktop webcams may reject the facingMode constraint — retry without it
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
 
         streamRef.current = stream;
         setScanActive(true);
@@ -162,7 +171,6 @@ export default function AdminCheckInClient({
         video.srcObject = stream;
         await video.play();
 
-        const detector = new BarcodeDetectorCtor({ formats: ["qr_code"] });
         scanLockRef.current = false;
 
         scanTimerRef.current = window.setInterval(async () => {
@@ -180,8 +188,19 @@ export default function AdminCheckInClient({
           if (!context) return;
 
           context.drawImage(currentVideo, 0, 0, canvas.width, canvas.height);
-          const detections = await detector.detect(canvas);
-          const detectedValue = detections[0]?.rawValue?.trim();
+
+          let detectedValue: string | undefined;
+          if (nativeDetector) {
+            // Chrome / Edge / Opera — native BarcodeDetector
+            const detections = await nativeDetector.detect(canvas);
+            detectedValue = detections[0]?.rawValue?.trim();
+          } else {
+            // Firefox / Safari / iOS — pure-JS jsQR fallback
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const result = jsQR(imageData.data, canvas.width, canvas.height);
+            detectedValue = result?.data?.trim();
+          }
+
           if (!detectedValue) return;
 
           scanLockRef.current = true;
