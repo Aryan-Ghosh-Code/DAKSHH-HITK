@@ -117,13 +117,13 @@ export async function POST(request: Request) {
       }
       sent++;
 
-      // Batch pause: longer break every 50 emails to stay well within Gmail limits
+      // Batch pause: longer break every 50 emails to stay well within Resend rate limits
       if (sent % 50 === 0 && i < uniqueRecipients.length - 1) {
         console.log(`Sent ${sent}/${uniqueRecipients.length}, pausing 2 s…`);
         await delay(2000);
       } else if (i < uniqueRecipients.length - 1) {
-        // Small gap between individual emails (pool handles auth reuse)
-        await delay(200);
+        // Small gap between individual emails
+        await delay(600);
       }
     }
 
