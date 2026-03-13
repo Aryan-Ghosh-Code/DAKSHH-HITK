@@ -6,11 +6,31 @@ import CTFAttempt from "@/lib/models/Attempt";
 import CTFTeamScore from "@/lib/models/Team";
 
 function normalizeFlag(value: string): string {
-  return value
+  const normalized = value
     .trim()
     .normalize("NFKC")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/[‐‑‒–—−]/g, "-");
+
+  const match = normalized.match(/^([A-Za-z0-9_]+)\{([\s\S]*)\}$/);
+  if (!match) return normalized;
+
+  const [, prefix, payload] = match;
+  if (prefix.toLowerCase() !== "dakshh") return normalized;
+
+  // Header is case-insensitive for DAKSHH{...}
+  return `dakshh{${payload}}`;
+}
+
+function getHeaderVariants(flag: string): string[] {
+  const trimmed = flag.trim();
+  const match = trimmed.match(/^([A-Za-z0-9_]+)\{([\s\S]*)\}$/);
+  if (!match) return [trimmed];
+
+  const [, prefix, payload] = match;
+  if (prefix.toLowerCase() !== "dakshh") return [trimmed];
+
+  return Array.from(new Set([trimmed, `dakshh{${payload}}`, `DAKSHH{${payload}}`]));
 }
 
 function hashFlag(flag: string): string {
@@ -87,8 +107,11 @@ export async function POST(req: NextRequest) {
     const normalizedSubmittedFlag = normalizeFlag(String(flag));
     const normalizedStoredFlag = normalizeFlag(String(challenge.flagHash || ""));
     const isRawMatch = normalizedSubmittedFlag === normalizedStoredFlag;
-    const submittedHash = hashFlag(String(flag));
-    const isHashMatch = submittedHash === String(challenge.flagHash || "").trim();
+    const storedHash = String(challenge.flagHash || "").trim();
+    const headerVariants = getHeaderVariants(String(flag));
+    const hashCandidates = headerVariants.map((variant) => hashFlag(variant));
+    const submittedHash = hashCandidates[0];
+    const isHashMatch = hashCandidates.includes(storedHash);
 
     if (isRawMatch || isHashMatch) {
       // Correct!
@@ -120,8 +143,10 @@ export async function POST(req: NextRequest) {
       teamId,
       challengeId,
       submittedFlag: normalizedSubmittedFlag,
+      submittedFlagVariants: headerVariants,
       isRawMatch,
       submittedHash,
+      hashCandidates,
       isHashMatch,
       storedFlagHash: normalizedStoredFlag,
     });

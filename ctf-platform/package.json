@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ctf:reset-attempts:dry": "node --env-file=.env scripts/reset-ctf-attempts.mjs",
+    "ctf:reset-attempts": "node --env-file=.env scripts/reset-ctf-attempts.mjs --yes"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
