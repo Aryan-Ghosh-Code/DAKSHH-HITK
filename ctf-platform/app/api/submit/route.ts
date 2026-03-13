@@ -110,7 +110,6 @@ export async function POST(req: NextRequest) {
     const storedHash = String(challenge.flagHash || "").trim();
     const headerVariants = getHeaderVariants(String(flag));
     const hashCandidates = headerVariants.map((variant) => hashFlag(variant));
-    const submittedHash = hashCandidates[0];
     const isHashMatch = hashCandidates.includes(storedHash);
 
     if (isRawMatch || isHashMatch) {
@@ -137,19 +136,6 @@ export async function POST(req: NextRequest) {
         points: challenge.points,
       });
     }
-
-    // Wrong flag: log the submitted value and comparison logic for debugging.
-    console.warn("[submit] incorrect flag submission", {
-      teamId,
-      challengeId,
-      submittedFlag: normalizedSubmittedFlag,
-      submittedFlagVariants: headerVariants,
-      isRawMatch,
-      submittedHash,
-      hashCandidates,
-      isHashMatch,
-      storedFlagHash: normalizedStoredFlag,
-    });
 
     // Wrong flag
     if (attempt.attempts >= MAX_ATTEMPTS_BEFORE_LOCK) {
