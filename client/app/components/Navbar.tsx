@@ -123,6 +123,7 @@ export default function Navbar() {
     // { name: "Sponsors", href: "/#sponsors" },
     { name: "Schedule", href: "/schedule" },
     { name: "Events", href: "/events" },
+    { name: "Results", href: "/results" },
     { name: "Seminars", href: "/seminars" },
     // { name: "Contact", href: "/#contact" },
   ];

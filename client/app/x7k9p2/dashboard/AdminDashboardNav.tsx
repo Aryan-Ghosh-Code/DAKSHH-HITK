@@ -99,6 +99,11 @@ export default function AdminDashboardNav({
       show: hasPermission(session, "events"),
     },
     {
+      href: `${base}/results`,
+      label: "Results",
+      show: canManageUsers(session),
+    },
+    {
       href: `${base}/participants`,
       label: "Participants",
       show: hasPermission(session, "users"),
